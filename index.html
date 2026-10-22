@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Mind Maps</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mind Maps">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" id="tc" content="#F2F2F7">
+<script>try{var __t=localStorage.getItem("mindmaps-theme");if(__t==="light"||__t==="dark")document.documentElement.setAttribute("data-theme",__t)}catch(e){}</script>
+<style>
+/* Layout: iOS 26 style. Content sits on a plain grouped background and every control floats on translucent glass.
+   Library is a large-title list of folders and maps; the editor is a full-bleed canvas with a glass top bar, dock and inspector. */
+:root {
+  color-scheme: light;
+  --bg: #F2F2F7; --panel: #FFFFFF; --ink: #1C1C1E; --ink2: #6C6C70; --line: rgba(60,60,67,.16); --dot: rgba(60,60,67,.22);
+  --tint: #007AFF; --red: #FF3B30; --on: #FFFFFF; --mix: 66%;
+  --glass: rgba(255,255,255,.58); --glass-edge: rgba(255,255,255,.8);
+  --glass-sh: 0 12px 36px rgba(0,0,0,.13), 0 1px 3px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.95);
+  --press: rgba(60,60,67,.12);
+  --b0: #007AFF; --b1: #FF2D55; --b2: #34C759; --b3: #FF9500; --b4: #AF52DE; --b5: #30B0C7;
+  --f-body: -apple-system, "SF Pro Text", "SF Pro", system-ui, "Segoe UI", sans-serif;
+  --f-display: -apple-system, "SF Pro Display", system-ui, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #000000; --panel: #1C1C1E; --ink: #F2F2F7; --ink2: #98989F; --line: rgba(235,235,245,.16); --dot: rgba(235,235,245,.17);
+    --tint: #0A84FF; --red: #FF453A; --on: #000000; --mix: 100%;
+    --glass: rgba(44,44,48,.56); --glass-edge: rgba(255,255,255,.17);
+    --glass-sh: 0 14px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.14);
+    --press: rgba(235,235,245,.14);
+    --b0: #0A84FF; --b1: #FF375F; --b2: #30D158; --b3: #FF9F0A; --b4: #BF5AF2; --b5: #40C8E0;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #000000; --panel: #1C1C1E; --ink: #F2F2F7; --ink2: #98989F; --line: rgba(235,235,245,.16); --dot: rgba(235,235,245,.17);
+  --tint: #0A84FF; --red: #FF453A; --on: #000000; --mix: 100%;
+  --glass: rgba(44,44,48,.56); --glass-edge: rgba(255,255,255,.17);
+  --glass-sh: 0 14px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.14);
+  --press: rgba(235,235,245,.14);
+  --b0: #0A84FF; --b1: #FF375F; --b2: #30D158; --b3: #FF9F0A; --b4: #BF5AF2; --b5: #40C8E0;
+}
+:root[data-theme="light"] { color-scheme: light; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.4; overflow: hidden; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+[hidden] { display: none !important; }
+.screen { height: 100%; }
+.ic { width: 20px; height: 20px; flex: none; }
+.glass {
+  background: var(--glass); -webkit-backdrop-filter: blur(28px) saturate(180%); backdrop-filter: blur(28px) saturate(180%);
+  border: .5px solid var(--glass-edge); box-shadow: var(--glass-sh);
+}
+.cap {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none; min-height: 42px; padding: 0 16px; border-radius: 999px;
+  font: 500 15px var(--f-body); color: var(--tint); cursor: pointer; white-space: nowrap;
+  background: var(--glass); -webkit-backdrop-filter: blur(28px) saturate(180%); backdrop-filter: blur(28px) saturate(180%);
+  border: .5px solid var(--glass-edge); box-shadow: var(--glass-sh);
+}
+.cap:active:not(:disabled) { background: var(--press); }
+.cap:disabled { opacity: .38; }
+.cap.tint { background: var(--tint); color: #fff; border-color: transparent; box-shadow: 0 6px 18px color-mix(in srgb, var(--tint) 40%, transparent); }
+.cap.plain { color: var(--ink); }
+:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+
+.cap svg { width: 19px; height: 19px; flex: none; }
+.cap.icon { padding: 0; width: 42px; }
+.seg { display: flex; padding: 3px; border-radius: 12px; background: var(--press); gap: 2px; }
+.seg button { all: unset; flex: 1; text-align: center; min-height: 36px; line-height: 36px; border-radius: 10px; font: 500 14px var(--f-body); cursor: pointer; color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--panel); box-shadow: 0 1px 4px rgba(0,0,0,.18); font-weight: 600; }
+.seg button:focus-visible { outline: 2px solid var(--tint); }
+.sh h3 { font: 600 13px var(--f-body); color: var(--ink2); margin: 8px 4px 0; }
+.sh textarea { width: 100%; min-height: 132px; resize: vertical; font: 400 16px/1.45 var(--f-body); color: var(--ink); background: var(--press); border: 0; border-radius: 14px; padding: 12px 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { all: unset; box-sizing: border-box; cursor: pointer; min-height: 34px; padding: 0 13px; border-radius: 999px; font: 500 13.5px var(--f-body); color: var(--tint); background: var(--press); display: inline-flex; align-items: center; }
+.chip:active { opacity: .6; }
+.chip:focus-visible { outline: 2px solid var(--tint); }
+.sh .msg { min-height: 20px; font-size: 13.5px; }
+.sh .msg.err { color: var(--red); }
+.syncLine { margin: -6px 0 0; font-size: 13px; color: var(--ink2); }
+.sh .files { max-height: 96px; overflow-y: auto; font-size: 13.5px; color: var(--ink2); padding: 0 4px; overflow-wrap: anywhere; white-space: pre-line; }
+.linkb { all: unset; cursor: pointer; color: var(--tint); font-size: 14px; padding: 6px 4px; }
+.linkb:focus-visible { outline: 2px solid var(--tint); border-radius: 6px; }
+.sh pre { margin: 0; max-height: 110px; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, monospace; background: var(--press); border-radius: 12px; padding: 10px; white-space: pre-wrap; }
+
+/* ---- library ---- */
+#libScreen {
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) max(20px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 60px) max(20px, env(safe-area-inset-left, 0px));
+  background:
+    radial-gradient(900px 520px at 8% -8%, color-mix(in srgb, var(--b0) 17%, transparent), transparent 62%),
+    radial-gradient(760px 520px at 100% -4%, color-mix(in srgb, var(--b1) 11%, transparent), transparent 60%), var(--bg);
+}
+.libwrap { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.libTop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 44px; }
+.libActs { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.libwrap h1 { font: 700 36px/1.08 var(--f-display); letter-spacing: -.022em; margin: 4px 0 0; overflow-wrap: anywhere; text-wrap: balance; }
+.lead { margin: 0; color: var(--ink2); max-width: 64ch; }
+.tip { border-radius: 18px; padding: 12px 16px; color: var(--ink2); font-size: 14px; background: color-mix(in srgb, var(--panel) 70%, transparent); border: .5px solid var(--line); }
+.sec { font: 600 13px var(--f-body); letter-spacing: .02em; color: var(--ink2); margin: 14px 4px 0; text-transform: none; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); gap: 12px; margin-top: 8px; }
+.card { position: relative; background: var(--panel); border-radius: 24px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.05); min-width: 0; }
+.card .open { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 8px; min-height: 92px; width: 100%; padding-right: 36px; box-sizing: border-box; }
+.card .open:focus-visible { outline: 2px solid var(--tint); outline-offset: 6px; border-radius: 10px; }
+.card .name { font: 600 17px/1.25 var(--f-display); letter-spacing: -.01em; overflow-wrap: anywhere; }
+.card .meta { font-size: 13px; color: var(--ink2); }
+.card .dots { display: flex; gap: 4px; }
+.card .dots i { width: 16px; height: 6px; border-radius: 3px; }
+.card .fico { color: var(--tint); display: block; width: 46px; height: 38px; }
+.card .fico svg { width: 100%; height: 100%; display: block; }
+.card .more { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--press); color: var(--ink2); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.empty { color: var(--ink2); padding: 40px 4px; text-align: center; }
+
+/* ---- sheets ---- */
+#sheet { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; padding: 12px max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+#sheet .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.28); }
+#sheet .sh { position: relative; width: min(460px, 100%); max-height: 82%; overflow-y: auto; border-radius: 30px; padding: 18px 16px 14px; display: flex; flex-direction: column; gap: 12px; }
+@media (min-width: 700px) { #sheet { align-items: center; } }
+#shT { font: 600 17px var(--f-display); text-align: center; margin: 0; }
+.rows { display: flex; flex-direction: column; gap: 2px; }
+.rowb { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 0 16px; border-radius: 16px; font: 400 17px var(--f-body); color: var(--ink); cursor: pointer; }
+.rowb:active:not(:disabled) { background: var(--press); }
+.rowb:focus-visible { outline: 2px solid var(--tint); }
+.rowb.destructive { color: var(--red); }
+.rowb.cancel { justify-content: center; font-weight: 600; color: var(--tint); margin-top: 6px; background: var(--press); }
+.rowb:disabled { opacity: .35; }
+.rowb .ck { margin-left: auto; color: var(--tint); }
+.rowb .fi { width: 22px; height: 18px; color: var(--tint); flex: none; }
+.sh p { margin: 0; color: var(--ink2); font-size: 14px; }
+.sh input[type=text], .sh input[type=password], .sh input[type=email] { width: 100%; font: 400 17px var(--f-body); color: var(--ink); background: var(--press); border: 0; border-radius: 14px; padding: 0 14px; min-height: 46px; }
+.srow { display: flex; gap: 10px; }
+.srow .cap { flex: 1; }
+.fld { display: flex; flex-direction: column; gap: 6px; }
+.fld label { font: 500 13px var(--f-body); color: var(--ink2); padding-left: 4px; }
+.sw-row { display: flex; align-items: center; gap: 12px; justify-content: space-between; min-height: 44px; font-size: 16px; }
+.sw-row input { width: 52px; height: 32px; appearance: none; -webkit-appearance: none; border-radius: 16px; background: var(--press); position: relative; transition: background .2s; flex: none; }
+.sw-row input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.3); transition: transform .2s; }
+.sw-row input:checked { background: var(--b2); }
+.sw-row input:checked::after { transform: translateX(20px); }
+#busy { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.3); padding: 20px; }
+#busy .box { border-radius: 30px; padding: 22px; width: min(420px, 100%); display: flex; flex-direction: column; gap: 14px; }
+#busy h2 { font: 600 18px/1.2 var(--f-display); margin: 0; }
+#busy p { margin: 0; color: var(--ink2); font-size: 14px; overflow-wrap: anywhere; }
+#busy .bar2 { height: 6px; border-radius: 3px; background: var(--press); overflow: hidden; }
+#busy .bar2 i { display: block; height: 100%; width: 30%; background: var(--tint); border-radius: 3px; animation: slide 1.3s ease-in-out infinite; }
+@keyframes slide { 0% { margin-left: -30%; } 100% { margin-left: 100%; } }
+#toast { position: fixed; left: 50%; bottom: calc(112px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); padding: 10px 18px; border-radius: 999px; font-size: 14px; z-index: 60; max-width: min(92vw, 640px); text-align: center; }
+
+/* ---- editor ---- */
+#edScreen { position: fixed; inset: 0; }
+.app { position: absolute; inset: 0; }
+#view {
+  position: absolute; inset: 0; overflow: hidden; touch-action: none; background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--dot) 1.2px, transparent 1.6px); background-size: 24px 24px; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+#stage { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+#links { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+#links path { fill: none; stroke-linecap: round; opacity: .85; }
+.topbar { position: absolute; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 10px); left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); display: flex; align-items: center; gap: 8px; }
+.topbar .cap { padding: 0 14px 0 8px; }
+#mapName { flex: 1; min-width: 0; font: 600 17px var(--f-display); color: var(--ink); text-align: center; border-radius: 999px; min-height: 42px; padding: 0 16px; border-style: solid; }
+#mapName:focus { outline: 2px solid var(--tint); }
+.count { font-size: 12.5px; color: var(--ink2); padding: 0 14px; min-height: 42px; display: inline-flex; align-items: center; border-radius: 999px; white-space: nowrap; }
+#q { flex: none; width: 170px; font: 400 16px var(--f-body); color: var(--ink); border-radius: 999px; min-height: 42px; padding: 0 16px; }
+#q::placeholder { color: var(--ink2); }
+.dock {
+  position: absolute; z-index: 5; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  max-width: calc(100% - 24px); display: flex; align-items: stretch; gap: 2px; padding: 6px; border-radius: 34px; overflow-x: auto; scrollbar-width: none;
+}
+.dock::-webkit-scrollbar { display: none; }
+.dock .sp { width: .5px; background: var(--line); margin: 8px 5px; flex: none; }
+.tb { flex: none; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 56px; padding: 7px 6px 5px; border: 0; border-radius: 22px; background: transparent; color: var(--ink); font: 500 10.5px var(--f-body); cursor: pointer; }
+.tb .ic { width: 23px; height: 23px; color: var(--tint); }
+.tb:active:not(:disabled) { background: var(--press); }
+.tb:disabled { opacity: .32; }
+.tb.warn .ic { color: var(--red); }
+.panel {
+  position: absolute; z-index: 6; top: calc(env(safe-area-inset-top, 0px) + 66px); right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
+  width: 300px; border-radius: 28px; padding: 18px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch;
+}
+.app:not(.panel-open) .panel { display: none; }
+.panel h2 { font: 600 13px var(--f-body); color: var(--ink2); margin: 0; }
+.panel label.l { font: 500 13px var(--f-body); color: var(--ink2); padding-left: 2px; }
+.panel input[type=text], .panel textarea { width: 100%; font: 400 16px/1.45 var(--f-body); color: var(--ink); background: var(--press); border: 0; border-radius: 14px; padding: 11px 13px; }
+.panel textarea { resize: none; min-height: 130px; flex: 1; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field.grow { flex: 1; min-height: 0; }
+.sws { display: flex; gap: 10px; flex-wrap: wrap; }
+.sw { width: 34px; height: 34px; border-radius: 50%; border: 0; padding: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--panel), 0 0 0 5px var(--ink); }
+.sw:disabled { opacity: .3; }
+.row { display: flex; gap: 8px; }
+.row .cap { flex: 1; padding: 0 10px; }
+.chk { display: flex; gap: 10px; align-items: center; justify-content: space-between; font-size: 15px; min-height: 40px; }
+.chk input { width: 52px; height: 32px; appearance: none; -webkit-appearance: none; border-radius: 16px; background: var(--press); position: relative; transition: background .2s; flex: none; }
+.chk input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.3); transition: transform .2s; }
+.chk input:checked { background: var(--b2); }
+.chk input:checked::after { transform: translateX(20px); }
+.chk input:disabled { opacity: .4; }
+.hint { position: absolute; left: max(14px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 98px); font-size: 12px; color: var(--ink2); padding: 7px 12px; border-radius: 999px; pointer-events: none; max-width: 46%; }
+
+/* nodes */
+.node {
+  --c: var(--ink); position: absolute; left: 0; top: 0; width: max-content; max-width: 230px; padding: 8px 13px; border-radius: 15px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--c) 42%, transparent); background: color-mix(in srgb, var(--c) 14%, var(--panel)); color: var(--ink); font-size: 13px; line-height: 1.3;
+}
+.node .txt { display: block; overflow-wrap: anywhere; outline: none; }
+.node .txt[contenteditable="true"] { cursor: text; -webkit-user-select: text; user-select: text; font-size: 16px; }
+.node.d0 { max-width: 270px; background: var(--ink); color: var(--bg); border-color: var(--ink); border-radius: 24px; padding: 13px 20px; font: 700 19px/1.15 var(--f-display); letter-spacing: -.01em; text-align: center; box-shadow: 0 8px 22px rgba(0,0,0,.18); }
+.node.d1 { background: color-mix(in srgb, var(--c) var(--mix), #000); color: var(--on); border-color: transparent; font: 600 14.5px/1.2 var(--f-display); padding: 10px 15px; border-radius: 18px; }
+.node.d2 { font-weight: 500; }
+.node.q { border-style: dashed; background: var(--panel); }
+.node.q .txt::before { content: "Check"; display: block; font: 600 9.5px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--c); margin-bottom: 2px; }
+.node.sel { outline: 3px solid var(--tint); outline-offset: 2px; }
+.node.dim { opacity: .28; }
+.node.hit { box-shadow: 0 0 0 3px color-mix(in srgb, var(--b3) 70%, transparent); }
+.node.hasnote::after { content: ""; position: absolute; top: -4px; right: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--c); border: 2px solid var(--bg); }
+.node.d1.hasnote::after, .node.d0.hasnote::after { background: var(--bg); border-color: var(--c); }
+.node.L.hasnote::after { right: auto; left: -4px; }
+.tog { position: absolute; top: 50%; right: -15px; transform: translateY(-50%); width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 1.5px solid var(--c); background: var(--panel); color: var(--c); font: 600 11px var(--f-body); line-height: 1; cursor: pointer; }
+.node.L .tog { right: auto; left: -15px; }
+@media (max-width: 820px) {
+  .panel { left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); width: auto; top: auto; max-height: 38%; }
+  .hint, .count { display: none; }
+  #q { width: 120px; }
+  .libwrap h1 { font-size: 32px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="libScreen" class="screen">
+  <div class="libwrap">
+    <div class="libTop">
+      <button class="cap" id="lBack" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span id="lBackT">Mind Maps</span></button>
+      <div class="libActs">
+        <button class="cap icon" id="lTheme" aria-label="Switch between light and dark"></button>
+        <button class="cap icon" id="lAcct" aria-label="Account and sync"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg></button>
+        <button class="cap icon" id="lSet" aria-label="Settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9 M17 7h3 M4 17h3 M11 17h9 M15 4.5v5 M9 14.5v5"/></svg></button>
+        <button class="cap" id="lNewF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M12 11v5 M9.5 13.5h5"/></svg>New Folder</button>
+        <button class="cap tint" id="lNew"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg>New Map</button>
+        <button class="cap" id="lImport"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12 M8 11l4 4 4-4 M5 21h14"/></svg>Import</button>
+      </div>
+    </div>
+    <h1 id="libTitle">Mind Maps</h1>
+    <p class="syncLine" id="syncLine" hidden></p>
+    <p class="lead" id="lead">Import PowerPoint files (.pptx) and each deck becomes a map you can edit. With an API key in Settings, Claude organizes the deck the way you ask. Select several files at once. Saved map files (.json) load back in the same way.</p>
+    <div class="tip" id="installTip" hidden>To install: tap the Share button in Safari, then Add to Home Screen. The app then opens full screen and works offline. Maps are stored on this device, so use Export on a card to keep a backup.</div>
+    <div id="libBody"></div>
+    <input type="file" id="file" accept=".pptx,.json,application/json,application/vnd.openxmlformats-officedocument.presentationml.presentation" multiple hidden>
+  </div>
+</div>
+
+<div id="edScreen" class="screen" hidden>
+  <div class="app" id="app">
+    <div id="view" tabindex="0" aria-label="Mind map canvas">
+      <div id="stage"><svg id="links" aria-hidden="true"></svg><div id="layer"></div></div>
+    </div>
+    <div class="topbar">
+      <button class="cap" id="bBack"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span id="bBackT">Mind Maps</span></button>
+      <input id="mapName" class="glass" type="text" aria-label="Map name">
+      <span class="count glass" id="count"></span>
+      <input id="q" class="glass" type="search" placeholder="Search" aria-label="Search nodes">
+      <button class="cap icon" id="bTheme" aria-label="Switch between light and dark"></button>
+    </div>
+    <div class="hint glass">Tap to select · double-tap to rename · pinch to zoom</div>
+    <aside class="panel glass" id="panel" aria-label="Node details">
+      <h2 id="pKind">Node</h2>
+      <div class="field"><label class="l" for="pTitle">Title</label><input type="text" id="pTitle"></div>
+      <div class="field grow"><label class="l" for="pNote">Notes</label><textarea id="pNote" placeholder="Add detail, an example or the answer to a question."></textarea></div>
+      <label class="chk"><span>Self-check question</span><input type="checkbox" id="pQ"></label>
+      <div class="field"><label class="l">Branch color</label><div class="sws" id="sws"></div></div>
+      <div class="row"><button class="cap" id="pUp">Move up</button><button class="cap" id="pDown">Move down</button></div>
+    </aside>
+    <div class="dock glass" role="toolbar" aria-label="Mind map tools">
+      <button class="tb" id="bUndo" aria-label="Undo"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5 M4 9h10a6 6 0 0 1 0 12h-3"/></svg><span>Undo</span></button><button class="tb" id="bRedo" aria-label="Redo"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5 M20 9H10a6 6 0 0 0 0 12h3"/></svg><span>Redo</span></button><span class="sp"></span><button class="tb" id="bChild" aria-label="Add child"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h6v4H4z M14 15h6v4h-6z M7 9v4a2 2 0 0 0 2 2h5"/></svg><span>Add child</span></button><button class="tb" id="bSib" aria-label="Sibling"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4 M7 6v12 M7 6h4 M7 18h4 M11 4h9v4h-9z M11 16h9v4h-9z"/></svg><span>Sibling</span></button><button class="tb" id="bEdit" aria-label="Rename"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z M14 7l3 3"/></svg><span>Rename</span></button><button class="tb warn" id="bDel" aria-label="Delete"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14 M9 7V4h6v3 M7 7l1 13h8l1-13 M10 11v6 M14 11v6"/></svg><span>Delete</span></button><span class="sp"></span><button class="tb" id="bZout" aria-label="Zoom out"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg><span>Zoom out</span></button><button class="tb" id="bZin" aria-label="Zoom in"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14 M5 12h14"/></svg><span>Zoom in</span></button><button class="tb" id="bFit" aria-label="Fit"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5 M20 9V4h-5 M4 15v5h5 M20 15v5h-5"/></svg><span>Fit</span></button><button class="tb" id="bCollapse" aria-label="Collapse"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4l6 5 6-5 M6 20l6-5 6 5"/></svg><span>Collapse</span></button><button class="tb" id="bExpand" aria-label="Expand"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6-5 6 5 M6 15l6 5 6-5"/></svg><span>Expand</span></button><span class="sp"></span><button class="tb" id="bPanel" aria-label="Details"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v14H3z M15 5v14"/></svg><span>Details</span></button><button class="tb" id="bExportMap" aria-label="Export map"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3 M8 7l4-4 4 4 M6 11H5v10h14V11h-1"/></svg><span>Export map</span></button><button class="tb" id="bExport" aria-label="Outline"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12 M8 12h12 M8 18h12 M4 6h.01 M4 12h.01 M4 18h.01"/></svg><span>Outline</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="sheet" hidden><div class="scrim" id="shScrim"></div><div class="sh glass"><h2 id="shT"></h2><div id="shB"></div></div></div>
+<div id="busy" hidden><div class="box glass"><h2 id="busyT">Building map</h2><p id="busyP"></p><div class="bar2"><i></i></div><button class="cap plain" id="busyX">Cancel</button></div></div>
+<div id="toast" class="glass" hidden></div>
+
+<script src="config.js"></script>
+<script src="jszip.min.js"></script>
+<script>
+(function () {
+  var LKEY = 'mindmaps-library-v1';
+  var uid = function () { return 'n' + Math.random().toString(36).slice(2, 9); };
+  var $ = function (id) { return document.getElementById(id); };
+  function T(t, ch, o) { o = o || {}; return { id: uid(), t: t, n: o.n || '', k: o.k || '', c: !!o.c, col: o.col, ch: ch || [] }; }
+  function Q(t, n, ch) { return T(t, ch, { n: n, k: 'q' }); }
+
+  function defaultTree() {
+    var root = T('Genetic Code & Translation', [
+      T('15.1 Many genes encode proteins', [
+        T('One gene, one enzyme', [
+          T('Refined: one gene, one polypeptide'),
+          T('Beadle & Tatum, Neurospora', [
+            T('Auxotrophic mutants', [], { n: 'They developed a method for isolating auxotrophic mutants in the fungus Neurospora, which has a complex life cycle. These mutants need a specific supplement to grow on minimal medium.' }),
+            T('Arginine pathway', [
+              T('Group I: grows on ornithine, citrulline or arginine'),
+              T('Group II: citrulline or arginine'),
+              T('Group III: arginine only')
+            ], { n: 'Ornithine → citrulline → arginine. Each step is catalyzed by an enzyme affected by a mutation. Table 15.1 shows growth of arginine auxotrophs on minimal medium with each supplement (+ growth, − no growth).' })
+          ]),
+          Q('Order of A, B, C in the pathway?', 'Mutation 103 grows on A, B or C. Mutation 106 grows on A and C but not B. Mutation 102 grows only on C. Answer: B → A → C.')
+        ], { n: 'Genes function by encoding enzymes, and each gene encodes a separate enzyme. Beadle and Tatum’s work defined the relationship between genotype and phenotype.' }),
+        T('Protein structure', [
+          T('Amino acid', [], { n: 'A central carbon (Cα) attached to an amino group (NH3+), a carboxyl group (COO–), a hydrogen atom (H) and a radical group R.' }),
+          T('Peptide bond', [], { n: 'The carboxyl group of one amino acid is covalently attached to the amino group of another.' }),
+          T('Levels of structure', [
+            T('Primary: amino acid sequence'),
+            T('Secondary & tertiary: folding'),
+            T('Quaternary: 2+ chains associate')
+          ])
+        ], { n: 'Proteins are polymers of amino acids linked by peptide bonds.' }),
+        T('Protein functions', [
+          T('Luciferase: firefly light', [], { n: 'The light of fireflies comes from a reaction between luciferin and ATP catalyzed by the enzyme luciferase.' }),
+          T('Fibroin: spider webs', [], { n: 'Fibroin is the major structural component of spider webs.' }),
+          T('Ricin: castor bean toxin', [], { n: 'Castor beans contain a highly toxic protein called ricin.' })
+        ])
+      ]),
+      T('15.2 The genetic code', [
+        T('Triplet code', [T('Codon: 3 nucleotides = 1 amino acid')], { n: 'Three nucleotides encode each amino acid in a protein.' }),
+        Q('What is a codon?', 'Three nucleotides that encode an amino acid.'),
+        T('64 codons', [
+          T('AUG: initiation codon'),
+          T('UAA, UAG, UGA: stop codons'),
+          T('Nirenberg & Leder', [], { n: 'Used ribosome-bound tRNAs to provide additional information about the genetic code.' })
+        ], { n: 'Codons are written 5′→3′, as they appear in the mRNA. Each codon specifies an amino acid (three-letter abbreviation) or a signal.' }),
+        T('Wobble', [
+          T('mRNA and tRNA pair antiparallel'),
+          T('Positions 1, 2: Watson–Crick (A–U, G–C)'),
+          T('Position 3: relaxed pairing', [], { n: 'G on the anticodon can pair with either U or C on the codon.' })
+        ]),
+        T('Reading frame', [
+          T('Three possible frames', [], { n: 'Each different way of reading the sequence in groups of three encodes a different amino acid sequence.' }),
+          T('Non-overlapping', [], { n: 'A single nucleotide may not be included in more than one codon.' }),
+          T('Set by the initiation codon; ends at a stop codon')
+        ]),
+        T('Universality', [], { n: 'Near universal, with a few exceptions.' }),
+        Q('Do start and stop codons specify amino acids?', 'The initiation codon encodes N-formylmethionine in bacteria and methionine in eukaryotes. Termination codons do not specify amino acids.')
+      ]),
+      T('15.3 Assembling a protein', [
+        T('tRNA charging', [
+          T('Aminoacyl-tRNA synthetases', [], { n: 'Each synthetase determines the specificity between an amino acid and its tRNA. There are exactly 20 different synthetases in a cell.' }),
+          T('Amino acid joins the 3′ end', [], { n: 'The carboxyl group (COO–) attaches to the hydroxyl group of the 2′- or 3′-carbon of the final nucleotide at the 3′ end of the tRNA. The base there is always adenine.' }),
+          T('Two-step reaction, needs ATP'),
+          Q('Where do amino acids bind a tRNA?', 'The 3′ end.')
+        ]),
+        T('Initiation', [
+          T('Initiation factors + GTP', [], { n: 'In bacteria: IF-1, IF-2 and IF-3.' }),
+          T('Shine–Dalgarno sequence', [], { n: 'A consensus sequence in bacterial mRNA required for attachment of the small ribosomal subunit.' }),
+          T('Charged initiator tRNA binds start codon'),
+          T('Large subunit joins last'),
+          T('Eukaryotes: poly(A) tail helps', [], { n: 'The poly(A) tail of eukaryotic mRNA plays a role in initiation of translation.' }),
+          Q('Which sequence does the small subunit bind in bacteria?', 'The Shine–Dalgarno sequence.')
+        ]),
+        T('Elongation', [
+          T('Charged tRNA enters the A site'),
+          T('Peptide bond forms (A and P sites)'),
+          T('Ribosome translocates one codon'),
+          T('Sites E, P, A', [], { n: 'Exit site (E), peptidyl site (P), aminoacyl site (A).' }),
+          T('Factors Tu, Ts, G + GTP'),
+          Q('What catalyzes peptide bond formation?', 'rRNA in the large subunit.')
+        ]),
+        T('Termination', [
+          T('Stop codon: UAA, UAG, UGA'),
+          T('Release factors', [], { n: 'They bind the termination codon and cause release of the polypeptide from the last tRNA, the tRNA from the ribosome, and the mRNA from the ribosome. For UAG the release factor is RF-1.' })
+        ]),
+        T('Energy: ATP and GTP', [], { n: 'Translation consists of tRNA charging, initiation, elongation and termination. Amino acids are linked in the order specified by mRNA. Initiation, elongation and release factors take part, and energy comes from ATP and GTP.' })
+      ]),
+      T('15.4 More about RNA & ribosomes', [
+        T('3-D structure of the ribosome'),
+        T('Polyribosome', [
+          T('Many ribosomes on one mRNA', [], { n: 'Ribosomes move from the 5′ end to the 3′ end of the mRNA. This happens in prokaryotes and eukaryotes.' }),
+          Q('Which ribosomes carry the longest polypeptides?', 'Those at the 3′ end of the mRNA, since they started earliest.')
+        ], { n: 'An mRNA with several ribosomes attached.' }),
+        T('mRNA surveillance', [
+          T('Detects errors in mRNA'),
+          T('Nonsense-mediated decay', [], { n: 'Eliminates mRNA containing premature termination codons.' })
+        ]),
+        T('Posttranslational modification', [T('Folding'), T('Molecular chaperones')]),
+        T('Translation and antibiotics'),
+        T('Nonstandard protein synthesis')
+      ])
+    ], { n: 'Chapter 15 opens with the spleen, an organ in the upper abdomen that defends against infection. Isolated congenital asplenia is an autosomal dominant condition in which children are born without a spleen. The deck jumps from 15.1 to 15.3, so the genetic code branch is labeled 15.2.' });
+    return root;
+  }
+
+  /* ---------- library storage ---------- */
+  var lib = { maps: [] }, cur = null, root = null;
+  function loadLib() {
+    try { var s = localStorage.getItem(LKEY); if (s) { var l = JSON.parse(s); if (l && Array.isArray(l.maps)) return l; } } catch (e) {}
+    return null;
+  }
+  function saveLibQuiet() {
+    try { localStorage.setItem(LKEY, JSON.stringify(lib)); return true; }
+    catch (e) { toast('Couldn’t save. Storage may be full, so export your maps.'); return false; }
+  }
+  function saveLib() { var ok = saveLibQuiet(); scheduleSync(); return ok; }
+  lib = loadLib();
+  if (!lib) {
+    lib = { folders: [], maps: [{ id: 'seed-ch15', name: 'Ch. 15 · Genetic Code and Translation', updated: 1, root: defaultTree() }] };
+    saveLib();
+  }
+  lib.folders = Array.isArray(lib.folders) ? lib.folders : [];
+  lib.folders.forEach(function (f) { f.parent = f.parent || null; });
+  lib.maps.forEach(function (m) { m.folder = m.folder || null; });
+  lib.deleted = Array.isArray(lib.deleted) ? lib.deleted : [];
+  lib.sync = lib.sync || { pull: 0, push: 0, uid: '' };
+  lib.folders.forEach(function (f) { f.updated = f.updated || 1; });
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+
+  function normalize(r) { r.ch.forEach(function (b, i) { if (typeof b.col !== 'number') b.col = i % 6; }); }
+  function countAll(n) { return 1 + n.ch.reduce(function (a, c) { return a + countAll(c); }, 0); }
+  function descendants(n) { return countAll(n) - 1; }
+
+  /* ---------- toast / file helpers ---------- */
+  var toastT;
+  function toast(m) { var t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 3000); }
+  function slug(s) { return (s || 'mind-map').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'mind-map'; }
+  function shareFile(filename, text, type) {
+    var blob = new Blob([text], { type: type });
+    try {
+      var f = new File([blob], filename, { type: type });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        return navigator.share({ files: [f], title: filename }).catch(function (e) { if (e && e.name === 'AbortError') return; return anchorSave(blob, filename); });
+      }
+    } catch (e) {}
+    return Promise.resolve(anchorSave(blob, filename));
+  }
+  function anchorSave(blob, filename) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  }
+
+  /* ---------- screens, folders, sheets ---------- */
+  var curFolder = null;
+  var colV = function (i) { return 'var(--b' + (i % 6) + ')'; };
+  var FOLDER_SVG = '<svg viewBox="0 0 48 38" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4-4h10.5a4 4 0 0 1 3.2 1.6L24 9h16a4 4 0 0 1 4 4v19a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="currentColor"/></svg>';
+  var MORE_SVG = '<svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18.5" cy="12" r="1.8"/></svg>';
+  var CHECK_SVG = '<svg class="ic ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function folderById(id) { return lib.folders.filter(function (f) { return f.id === id; })[0] || null; }
+  function mapById(id) { return lib.maps.filter(function (m) { return m.id === id; })[0] || null; }
+  function tomb(id, kind) { lib.deleted = lib.deleted.filter(function (d) { return d.id !== id; }); lib.deleted.push({ id: id, kind: kind, updated: Date.now() }); }
+  function mfolder(m) { return m.folder && folderById(m.folder) ? m.folder : null; }
+  function fparent(f) { return f.parent && folderById(f.parent) ? f.parent : null; }
+  function isInside(fid, anc) { var n = 0; while (fid && n++ < 60) { if (fid === anc) return true; var f = folderById(fid); fid = f ? f.parent : null; } return false; }
+  function itemsIn(fid) { return lib.maps.filter(function (m) { return mfolder(m) === fid; }).length + lib.folders.filter(function (f) { return fparent(f) === fid; }).length; }
+  function byName(a, b) { return a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }); }
+  function showLib() { $('edScreen').hidden = true; $('libScreen').hidden = false; renderLib(); if (typeof cloud !== 'undefined' && cloud && cloud.session) { setSyncMsg(cloud.msg); sync({ pull: true }); } }
+  function showEd() { $('libScreen').hidden = true; $('edScreen').hidden = false; }
+
+  var sheetEl = $('sheet');
+  function openSheet(title, node) { $('shT').textContent = title || ''; $('shT').hidden = !title; var b = $('shB'); b.innerHTML = ''; b.appendChild(node); sheetEl.hidden = false; }
+  function closeSheet() { sheetEl.hidden = true; $('shB').innerHTML = ''; }
+  $('shScrim').addEventListener('click', closeSheet);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !sheetEl.hidden) closeSheet(); });
+  function rowBtn(label, fn, o) {
+    o = o || {}; var b = el('button', 'rowb' + (o.destructive ? ' destructive' : '')); b.type = 'button';
+    if (o.folder) { var fi = el('span', 'fi'); fi.innerHTML = FOLDER_SVG; fi.firstChild.setAttribute('width', '22'); b.appendChild(fi); }
+    b.appendChild(el('span', '', label));
+    if (o.here) b.insertAdjacentHTML('beforeend', CHECK_SVG);
+    if (o.disabled) b.disabled = true;
+    b.addEventListener('click', fn); return b;
+  }
+  function cancelRow() { var c = rowBtn('Cancel', closeSheet); c.classList.add('cancel'); return c; }
+  function menuSheet(title, items) {
+    var w = el('div', 'rows');
+    items.forEach(function (it) { w.appendChild(rowBtn(it.label, function () { closeSheet(); it.fn(); }, { destructive: it.destructive })); });
+    w.appendChild(cancelRow()); openSheet(title, w);
+  }
+  function promptSheet(title, val, okLabel, cb) {
+    var w = el('div', 'fld'), inp = el('input'); inp.type = 'text'; inp.value = val; inp.setAttribute('aria-label', title); inp.autocomplete = 'off';
+    var row = el('div', 'srow'), c = el('button', 'cap plain', 'Cancel'), ok = el('button', 'cap tint', okLabel);
+    c.type = ok.type = 'button'; c.addEventListener('click', closeSheet);
+    function go() { var v = inp.value.trim(); if (!v) return; closeSheet(); cb(v); }
+    ok.addEventListener('click', go); inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+    row.appendChild(c); row.appendChild(ok); w.appendChild(inp); w.appendChild(row); openSheet(title, w);
+    setTimeout(function () { inp.focus(); inp.select(); }, 60);
+  }
+  function confirmSheet(title, msg, label, cb) {
+    var w = el('div', 'rows'); w.appendChild(el('p', '', msg)); w.firstChild.style.padding = '0 8px 8px';
+    w.appendChild(rowBtn(label, function () { closeSheet(); cb(); }, { destructive: true })); w.appendChild(cancelRow()); openSheet(title, w);
+  }
+  function moveSheet(kind, id) {
+    var item = kind === 'folder' ? folderById(id) : mapById(id), here = (kind === 'folder' ? item.parent : item.folder) || null;
+    var w = el('div', 'rows');
+    function add(fid, depth, label) {
+      var invalid = kind === 'folder' && fid && (fid === id || isInside(fid, id));
+      var b = rowBtn(label, function () {
+        closeSheet(); if (kind === 'folder') item.parent = fid; else item.folder = fid;
+        item.updated = Date.now(); saveLib(); renderLib(); toast('Moved to “' + (fid ? folderById(fid).name : 'Mind Maps') + '”.');
+      }, { folder: !!fid, here: fid === here, disabled: invalid });
+      b.style.paddingLeft = (16 + depth * 22) + 'px'; w.appendChild(b);
+    }
+    add(null, 0, 'Mind Maps');
+    (function walk(pid, d) { lib.folders.filter(function (f) { return (f.parent || null) === pid; }).sort(byName).forEach(function (f) { add(f.id, d, f.name); walk(f.id, d + 1); }); })(null, 1);
+    w.appendChild(cancelRow()); openSheet('Move “' + item.name + '” to', w);
+  }
+  function settingsSheet() {
+    var w = el('div', 'fld'); w.style.gap = '12px';
+    w.appendChild(el('h3', '', 'Appearance'));
+    var seg = el('div', 'seg'), modes = ['system', 'light', 'dark'];
+    ['System', 'Light', 'Dark'].forEach(function (lab, i) {
+      var b = el('button', '', lab); b.type = 'button'; b.setAttribute('aria-pressed', String(themeMode() === modes[i]));
+      b.addEventListener('click', function () { applyTheme(modes[i]); Array.from(seg.children).forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); });
+      seg.appendChild(b);
+    });
+    w.appendChild(seg);
+    w.appendChild(el('h3', '', 'Account'));
+    var ac = rowBtn(cloud.session ? 'Signed in as ' + cloud.session.email : 'Sign in to sync your maps', function () { closeSheet(); accountSheet(); }); ac.style.background = 'var(--press)'; w.appendChild(ac);
+    w.appendChild(el('h3', '', 'AI imports'));
+    var r1 = el('label', 'sw-row'), cb = el('input'); cb.type = 'checkbox'; cb.checked = settings.useAi;
+    r1.appendChild(el('span', '', 'Use AI for PowerPoint imports')); r1.appendChild(cb);
+    cb.addEventListener('change', function () { settings.useAi = cb.checked; saveSettings(); });
+    var f1 = el('div', 'fld'), k = el('input'); k.type = 'password'; k.value = settings.key; k.placeholder = 'sk-ant-…'; k.autocomplete = 'off'; k.setAttribute('autocapitalize', 'off'); k.spellcheck = false;
+    var l1 = el('label', '', 'Anthropic API key'); l1.htmlFor = k.id = 'sKey'; f1.appendChild(l1); f1.appendChild(k);
+    k.addEventListener('input', function () { settings.key = k.value.trim(); saveSettings(); });
+    var f2 = el('div', 'fld'), m = el('input'); m.type = 'text'; m.value = settings.model; m.setAttribute('autocapitalize', 'off'); m.spellcheck = false;
+    var l2 = el('label', '', 'Model'); l2.htmlFor = m.id = 'sModel'; f2.appendChild(l2); f2.appendChild(m);
+    m.addEventListener('input', function () { settings.model = m.value.trim() || 'claude-sonnet-5-5'; saveSettings(); });
+    var note = el('p', '', 'With AI on, the text and speaker notes of each deck are sent to Anthropic to build the map. Your key stays on this device and goes only to api.anthropic.com. Usage is billed to your Anthropic account. Without a key, imports use a basic offline draft.');
+    var done = el('button', 'cap tint', 'Done'); done.type = 'button'; done.addEventListener('click', closeSheet);
+    [r1, f1, f2, note, done].forEach(function (x) { w.appendChild(x); }); openSheet('Settings', w);
+  }
+
+  function dotsFor(m) { var d = el('span', 'dots'); m.root.ch.slice(0, 8).forEach(function (b, i) { var x = document.createElement('i'); x.style.background = colV(typeof b.col === 'number' ? b.col : i); d.appendChild(x); }); return d; }
+  function moreBtn(fn) { var b = el('button', 'more'); b.type = 'button'; b.setAttribute('aria-label', 'More'); b.innerHTML = MORE_SVG; b.addEventListener('click', function (e) { e.stopPropagation(); fn(); }); return b; }
+  function folderCard(f) {
+    var card = el('div', 'card'), open = el('button', 'open'); open.type = 'button';
+    var ico = el('span', 'fico'); ico.innerHTML = FOLDER_SVG; open.appendChild(ico); open.appendChild(el('span', 'name', f.name));
+    var n = itemsIn(f.id); open.appendChild(el('span', 'meta', n + (n === 1 ? ' item' : ' items')));
+    open.addEventListener('click', function () { curFolder = f.id; renderLib(); $('libScreen').scrollTop = 0; });
+    card.appendChild(open);
+    card.appendChild(moreBtn(function () {
+      menuSheet(f.name, [
+        { label: 'Rename', fn: function () { promptSheet('Rename folder', f.name, 'Save', function (v) { f.name = v; f.updated = Date.now(); saveLib(); renderLib(); }); } },
+        { label: 'Move to…', fn: function () { moveSheet('folder', f.id); } },
+        { label: 'Delete folder', destructive: true, fn: function () {
+          confirmSheet('Delete “' + f.name + '”?', 'Anything inside moves up one level. No maps are deleted.', 'Delete Folder', function () {
+            var now = Date.now();
+            lib.maps.forEach(function (m) { if (m.folder === f.id) { m.folder = f.parent || null; m.updated = now; } });
+            lib.folders.forEach(function (x) { if (x.parent === f.id) { x.parent = f.parent || null; x.updated = now; } });
+            lib.folders = lib.folders.filter(function (x) { return x.id !== f.id; }); tomb(f.id, 'folder'); saveLib(); renderLib();
+          });
+        } }
+      ]);
+    }));
+    return card;
+  }
+  function mapCard(m) {
+    var card = el('div', 'card'), open = el('button', 'open'); open.type = 'button';
+    open.appendChild(el('span', 'name', m.name)); open.appendChild(dotsFor(m));
+    open.appendChild(el('span', 'meta', countAll(m.root) + ' nodes' + (m.updated > 1e12 ? ' · ' + new Date(m.updated).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '')));
+    open.addEventListener('click', function () { openMap(m.id); }); card.appendChild(open);
+    card.appendChild(moreBtn(function () {
+      menuSheet(m.name, [
+        { label: 'Rename', fn: function () { promptSheet('Rename map', m.name, 'Save', function (v) { m.name = v; m.updated = Date.now(); saveLib(); renderLib(); }); } },
+        { label: 'Move to…', fn: function () { moveSheet('map', m.id); } },
+        { label: 'Duplicate', fn: function () { var c = JSON.parse(JSON.stringify(m)); c.id = uid(); c.name = m.name + ' copy'; c.updated = Date.now(); lib.maps.push(c); saveLib(); renderLib(); } },
+        { label: 'Export', fn: function () { shareFile(slug(m.name) + '.json', JSON.stringify({ app: 'mindmap', v: 1, name: m.name, root: m.root }), 'application/json'); } },
+        { label: 'Delete', destructive: true, fn: function () { confirmSheet('Delete “' + m.name + '”?', 'This can’t be undone. Export it first if you want a copy.', 'Delete Map', function () { lib.maps = lib.maps.filter(function (x) { return x.id !== m.id; }); tomb(m.id, 'map'); saveLib(); renderLib(); }); } }
+      ]);
+    }));
+    return card;
+  }
+  function renderLib() {
+    var cf = curFolder ? folderById(curFolder) : null; if (curFolder && !cf) curFolder = null;
+    $('libTitle').textContent = cf ? cf.name : 'Mind Maps'; $('lead').hidden = !!cf; $('lBack').hidden = !cf;
+    if (cf) { var pf = cf.parent ? folderById(cf.parent) : null; $('lBackT').textContent = pf ? pf.name : 'Mind Maps'; }
+    var body = $('libBody'); body.innerHTML = '';
+    var fl = lib.folders.filter(function (f) { return fparent(f) === curFolder; }).sort(byName);
+    var ml = lib.maps.filter(function (m) { return mfolder(m) === curFolder; }).sort(function (a, b) { return b.updated - a.updated; });
+    function section(t) { body.appendChild(el('h2', 'sec', t)); var g = el('div', 'grid'); body.appendChild(g); return g; }
+    if (fl.length) { var g1 = section('Folders'); fl.forEach(function (f) { g1.appendChild(folderCard(f)); }); }
+    if (ml.length) { var g2 = section('Maps'); ml.forEach(function (m) { g2.appendChild(mapCard(m)); }); }
+    if (!fl.length && !ml.length) body.appendChild(el('div', 'empty', cf ? 'This folder is empty. Create a map here or import a deck.' : 'No maps yet. Create one or import a deck.'));
+  }
+  $('lBack').addEventListener('click', function () { var cf = folderById(curFolder); curFolder = cf ? (cf.parent || null) : null; renderLib(); $('libScreen').scrollTop = 0; });
+  $('lNewF').addEventListener('click', function () {
+    promptSheet('New folder', 'New folder', 'Create', function (v) { lib.folders.push({ id: uid(), name: v, parent: curFolder, updated: Date.now() }); saveLib(); renderLib(); });
+  });
+  $('lNew').addEventListener('click', function () {
+    promptSheet('New map', 'Untitled map', 'Create', function (v) { var m = { id: uid(), name: v, updated: Date.now(), folder: curFolder, root: T(v) }; lib.maps.push(m); saveLib(); openMap(m.id); });
+  });
+  $('lImport').addEventListener('click', function () { $('file').click(); });
+  $('lSet').addEventListener('click', settingsSheet);
+  $('lAcct').addEventListener('click', accountSheet);
+
+  $('file').addEventListener('change', function (e) {
+    var files = Array.from(e.target.files || []); e.target.value = '';
+    if (!files.length) return;
+    if (files.some(function (f) { return /\.pptx$/i.test(f.name); })) importSheet(files); else runImport(files, '', false);
+  });
+  function aiReady() { return settings.useAi && !!settings.key; }
+  var PRESETS = [
+    ['Follow the deck’s sections', 'Follow the deck’s own sections and headings.'],
+    ['Concepts first', 'Group by concept first, then supporting detail.'],
+    ['Study guide', 'Organize as a study guide: key terms, processes, and check questions.'],
+    ['Processes as steps', 'Show each process as ordered steps.'],
+    ['Keep it brief', 'Keep labels short and move detail into the notes.']
+  ];
+  function importSheet(files) {
+    var w = el('div', 'fld'); w.style.gap = '12px';
+    w.appendChild(el('div', 'files', files.map(function (f) { return f.name; }).join('\n')));
+    var row = el('div', 'srow'), c = el('button', 'cap plain', 'Cancel'); c.type = 'button'; c.addEventListener('click', closeSheet);
+    if (aiReady()) {
+      var l = el('label', '', 'How should this be organized?'); l.htmlFor = 'iInstr'; l.style.font = '600 15px var(--f-body)'; l.style.color = 'var(--ink)';
+      var ta = el('textarea'); ta.id = 'iInstr'; ta.placeholder = 'For example: group by exam topic, show each process as ordered steps, keep definitions in the notes.';
+      var chips = el('div', 'chips');
+      PRESETS.forEach(function (p) {
+        var ch = el('button', 'chip', p[0]); ch.type = 'button';
+        ch.addEventListener('click', function () { ta.value = (ta.value.trim() ? ta.value.trim() + ' ' : '') + p[1]; ta.focus(); });
+        chips.appendChild(ch);
+      });
+      var go = el('button', 'cap tint', files.length > 1 ? 'Build ' + files.length + ' maps' : 'Build map'); go.type = 'button';
+      go.addEventListener('click', function () { var v = ta.value.trim(); closeSheet(); runImport(files, v, true); });
+      w.appendChild(l); w.appendChild(ta); w.appendChild(chips);
+      w.appendChild(el('p', '', files.length > 1 ? 'These instructions apply to all ' + files.length + ' files.' : 'Leave this empty and Claude follows the deck’s own sections.'));
+      row.appendChild(c); row.appendChild(go); w.appendChild(row); openSheet('Organize your map', w);
+      setTimeout(function () { ta.focus(); }, 80);
+    } else {
+      w.appendChild(el('p', '', 'AI organization is off. Add an Anthropic API key in Settings to tell Claude how to organize your map, or build a basic draft from the slide headings now.'));
+      var st = el('button', 'cap plain', 'Settings'); st.type = 'button'; st.addEventListener('click', function () { closeSheet(); settingsSheet(); });
+      var dr = el('button', 'cap tint', 'Build draft'); dr.type = 'button'; dr.addEventListener('click', function () { closeSheet(); runImport(files, '', false); });
+      row.appendChild(st); row.appendChild(dr); w.appendChild(row); w.appendChild(cancelRow()); openSheet('Organize your map', w);
+    }
+  }
+  function runImport(files, instr, useAi) {
+    var ok = 0, notes = [], bad = [];
+    busy.cancelled = false;
+    files.reduce(function (p, f, idx) {
+      return p.then(function () {
+        if (busy.cancelled) return;
+        var label = (files.length > 1 ? '(' + (idx + 1) + ' of ' + files.length + ') ' : '') + f.name;
+        showBusy(/\.pptx$/i.test(f.name) && useAi ? 'Building map with AI' : 'Importing', label);
+        return importFile(f, useAi, label, instr).then(function (m) { m.map.folder = curFolder; m.map.updated = Date.now(); lib.maps.push(m.map); ok++; if (m.note) notes.push(f.name + ': ' + m.note); },
+          function (err) { if (!busy.cancelled) { bad.push(f.name); console.error(err); } });
+      });
+    }, Promise.resolve()).then(function () {
+      $('busy').hidden = true; saveLib(); renderLib();
+      toast(busy.cancelled ? 'Import cancelled. ' + ok + ' imported.' : ok + ' imported' + (bad.length ? '. Couldn’t read: ' + bad.join(', ') : '.') + (notes.length ? ' ' + notes.join(' ') : ''));
+    });
+  }
+  function importFile(f, useAi, label, instr) {
+    var base = f.name.replace(/\.[^.]+$/, '');
+    if (/\.json$/i.test(f.name)) {
+      return f.text().then(function (s) {
+        var j = JSON.parse(s), r = j && j.root ? j.root : j;
+        if (!r || !Array.isArray(r.ch) || typeof r.t !== 'string') throw new Error('Not a mind map file');
+        return { map: { id: uid(), name: (j && j.name) || base, updated: Date.now(), root: r } };
+      });
+    }
+    if (/\.pptx$/i.test(f.name)) {
+      return f.arrayBuffer().then(readSlides).then(function (slides) {
+        var draft = function (why) { return { map: slidesToDraft(slides, base.replace(/_/g, ' ')), note: why ? 'AI failed (' + why + '), so I made a basic draft.' : '' }; };
+        if (!useAi) return draft('');
+        var dump = slidesDump(slides);
+        if (dump.length > 400000) return draft('deck too large');
+        busy.ctl = new AbortController();
+        return aiRequest(dump, busy.ctl.signal, function (n) { $('busyP').textContent = label + ' · ' + Math.round(n / 100) / 10 + 'k characters written'; }, instr)
+          .then(function (text) { return { map: aiToMap(text, base.replace(/_/g, ' ')) }; })
+          .catch(function (err) {
+            if (busy.cancelled) throw err;
+            return draft(err && err.message ? err.message : 'unknown error');
+          });
+      });
+    }
+    return Promise.reject(new Error('Unsupported file'));
+  }
+
+  /* ---------- PPTX -> draft map ---------- */
+  var NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main', NS_P = 'http://schemas.openxmlformats.org/presentationml/2006/main';
+  function short(s, n) {
+    n = n || 78; s = s.trim();
+    if (s.length <= n) return { t: s, n: '' };
+    var cut = s.slice(0, n), i = cut.lastIndexOf(' '); if (i > 40) cut = cut.slice(0, i);
+    return { t: cut.replace(/[\s,;:.\-]+$/, '') + '…', n: s };
+  }
+  function norm(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+  function parsePara(p) {
+    var pr = p.getElementsByTagNameNS(NS_A, 'pPr')[0];
+    var t = Array.from(p.getElementsByTagNameNS(NS_A, 't')).map(function (x) { return x.textContent; }).join('').replace(/\s+/g, ' ').trim();
+    return { lvl: pr ? (parseInt(pr.getAttribute('lvl'), 10) || 0) : 0, t: t };
+  }
+  function slideContent(doc) {
+    var title = '', body = [];
+    var sps = Array.from(doc.getElementsByTagNameNS(NS_P, 'sp'));
+    sps.forEach(function (sp) {
+      var ph = sp.getElementsByTagNameNS(NS_P, 'ph')[0], type = ph ? ph.getAttribute('type') : '';
+      if (type === 'sldNum' || type === 'ftr' || type === 'dt') return;
+      var ps = Array.from(sp.getElementsByTagNameNS(NS_A, 'p')).map(parsePara).filter(function (p) { return p.t; });
+      if (!ps.length) return;
+      if (type === 'title' || type === 'ctrTitle') { if (!title) { title = ps.map(function (p) { return p.t; }).join(' '); return; } }
+      body = body.concat(ps);
+    });
+    Array.from(doc.getElementsByTagNameNS(NS_A, 'tbl')).forEach(function (tb) {
+      Array.from(tb.getElementsByTagNameNS(NS_A, 'tr')).forEach(function (tr) {
+        var cells = Array.from(tr.getElementsByTagNameNS(NS_A, 'tc')).map(function (tc) { return Array.from(tc.getElementsByTagNameNS(NS_A, 't')).map(function (x) { return x.textContent; }).join('').trim(); });
+        var line = cells.join(' | ').trim(); if (line.replace(/\|/g, '').trim()) body.push({ lvl: 0, t: line });
+      });
+    });
+    return { title: title, body: body };
+  }
+  function notesText(doc) {
+    var out = [];
+    Array.from(doc.getElementsByTagNameNS(NS_P, 'sp')).forEach(function (sp) {
+      var ph = sp.getElementsByTagNameNS(NS_P, 'ph')[0], type = ph ? ph.getAttribute('type') : '';
+      if (type !== 'body') return;
+      Array.from(sp.getElementsByTagNameNS(NS_A, 'p')).map(parsePara).forEach(function (p) { if (p.t) out.push(p.t); });
+    });
+    return out;
+  }
+  function bulletsToNodes(body) {
+    var min = body.reduce(function (m, p) { return Math.min(m, p.lvl); }, 9), top = [], stack = [];
+    body.forEach(function (p) {
+      var s = short(p.t, 80), node = T(s.t, [], { n: s.n }), d = p.lvl - min;
+      while (stack.length > d) stack.pop();
+      var parent = stack.length ? stack[stack.length - 1] : null;
+      (parent ? parent.ch : top).push(node); stack[d] = node; stack.length = d + 1;
+    });
+    return top;
+  }
+  async function readSlides(buf) {
+    var zip = await JSZip.loadAsync(buf), dp = new DOMParser();
+    var names = Object.keys(zip.files).filter(function (n) { return /^ppt\/slides\/slide\d+\.xml$/.test(n); })
+      .sort(function (a, b) { return parseInt(a.match(/(\d+)\.xml$/)[1], 10) - parseInt(b.match(/(\d+)\.xml$/)[1], 10); });
+    if (!names.length) throw new Error('No slides found');
+    var slides = [];
+    for (var i = 0; i < names.length; i++) {
+      var xml = await zip.file(names[i]).async('string'), c = slideContent(dp.parseFromString(xml, 'application/xml')), notes = [];
+      var relName = names[i].replace('ppt/slides/', 'ppt/slides/_rels/') + '.rels';
+      if (zip.file(relName)) {
+        var rel = await zip.file(relName).async('string'), m = rel.match(/Target="\.\.\/notesSlides\/(notesSlide\d+\.xml)"/);
+        if (m && zip.file('ppt/notesSlides/' + m[1])) notes = notesText(dp.parseFromString(await zip.file('ppt/notesSlides/' + m[1]).async('string'), 'application/xml'));
+      }
+      slides.push({ title: c.title, body: c.body, notes: notes });
+    }
+    return slides;
+  }
+  function pptxToMap(buf, fname) { return readSlides(buf).then(function (sl) { return slidesToDraft(sl, fname); }); }
+  function slidesToDraft(slides, fname) {
+    var rootNode = T(fname.replace(/[_]+/g, ' '), []), startAt = 0;
+    var first = slides[0];
+    if (first && first.title) { rootNode.t = short(first.title, 70).t; rootNode.n = first.body.map(function (p) { return p.t; }).join('\n'); startAt = 1; }
+    var section = null, lastTitle = '';
+    var secRe = /^(\d+(\.\d+)+\b|(chapter|section|part|unit|module)\s+\w+)/i;
+    for (var k = startAt; k < slides.length; k++) {
+      var s = slides[k], body = s.body.slice(), title = s.title;
+      if (!title && body.length) { title = body[0].t; body.shift(); }
+      var slideText = norm((s.title || '') + ' ' + s.body.map(function (p) { return p.t; }).join(' '));
+      var notes = s.notes.filter(function (n) { var nn = norm(n); return nn && slideText.indexOf(nn.slice(0, 60)) < 0; });
+      if (!title && notes.length) { title = notes.shift(); }
+      if (!title) continue;
+      if (norm(title) === lastTitle && !body.length) continue;
+      var node, ts = short(title, 80);
+      if (/^concept check/i.test(title)) {
+        var qs = body.length ? short(body[0].t, 80) : { t: 'Concept check', n: '' };
+        var full = body.map(function (p) { return p.t; }).join('\n');
+        node = Q(qs.t, (full ? full + '\n' : '') + (notes.length ? 'Answer: ' + notes.join(' ') : ''));
+      } else {
+        node = T(ts.t, bulletsToNodes(body), { n: [ts.n, notes.join('\n')].filter(Boolean).join('\n') });
+      }
+      lastTitle = norm(title);
+      var isSec = secRe.test(title) && !/^concept check/i.test(title);
+      if (isSec) { section = node; rootNode.ch.push(node); }
+      else if (section) section.ch.push(node);
+      else rootNode.ch.push(node);
+    }
+    if (countAll(rootNode) > 90) {
+      rootNode.ch.forEach(function (b) { b.ch.forEach(function (sl) { if (sl.ch.length > 1) sl.c = true; }); });
+    }
+    normalize(rootNode);
+    return { id: uid(), name: rootNode.t, updated: Date.now(), root: rootNode };
+  }
+
+
+  /* ---------- AI import ---------- */
+  var SKEY = 'mindmaps-settings-v1';
+  var settings = { key: '', model: 'claude-sonnet-5-5', useAi: true, sbUrl: '', sbKey: '' };
+  try { var ss = JSON.parse(localStorage.getItem(SKEY) || 'null'); if (ss) { settings.key = ss.key || ''; settings.model = ss.model || settings.model; settings.useAi = ss.useAi !== false; settings.sbUrl = ss.sbUrl || ''; settings.sbKey = ss.sbKey || ''; } } catch (e) {}
+  function saveSettings() { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch (e) {} }
+
+  var SYS = [
+    'You turn lecture slide text into a study mind map. Reply with one JSON object and nothing else (no code fences, no commentary).',
+    'Schema: {"title": string, "note": string, "branches": [Node]} where Node = {"t": string, "n": string, "k": "" or "q", "ch": [Node]}.',
+    'Rules:',
+    '- "branches" are the 4 to 7 main sections of the deck. Follow the deck’s own section headings and numbering when present, and do not invent sections.',
+    '- Go 3 to 4 levels deep. Group related slides under one node instead of making one node per slide. Merge repeated or near-duplicate slides.',
+    '- "t" is a short label of at most 8 words (60 characters). Use the deck’s own terms.',
+    '- "n" holds the supporting detail from the slides and speaker notes in 1 to 3 plain sentences: definitions, mechanisms, examples, numbers. Leave it empty when the label says it all.',
+    '- Every question or concept check in the deck becomes a node with "k":"q". Its "t" is the question in 12 words or fewer, and its "n" is the full question and the answer. Give the answer from the notes when they have it, otherwise work it out.',
+    '- Skip figure credits, copyright lines, image captions with no content, and slide numbers.',
+    '- Keep every fact faithful to the slides. Do not add outside facts, except to answer a concept check.',
+    '- "title" is the deck’s topic. "note" is one sentence of context, or an empty string.',
+    '- If the student gives organization instructions in their message, follow them as closely as this schema allows. They take priority over the default rules above about branch count, depth and grouping, but never over the JSON format.'
+  ].join('\n');
+
+  function slidesDump(slides) {
+    return slides.map(function (s, i) {
+      return '--- Slide ' + (i + 1) + ' ---\n' + (s.title ? 'TITLE: ' + s.title + '\n' : '') +
+        s.body.map(function (p) { return '  '.repeat(p.lvl) + '- ' + p.t; }).join('\n') + (s.notes.length ? '\nNOTES: ' + s.notes.join(' ') : '');
+    }).join('\n\n');
+  }
+  function aiRequest(dump, signal, onProgress, instr) {
+    return fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: signal,
+      headers: { 'content-type': 'application/json', 'x-api-key': settings.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: settings.model, max_tokens: 16000, stream: true, system: SYS, messages: [{ role: 'user', content: (instr ? 'The student asked for this organization:\n"""\n' + instr + '\n"""\n\n' : '') + 'Slides from the deck:\n\n' + dump }] })
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.json().catch(function () { return {}; }).then(function (j) {
+          var m = j && j.error && j.error.message;
+          throw new Error(res.status === 401 ? 'the API key was rejected' : res.status === 404 ? 'that model name was not found' : res.status === 429 ? 'rate limit reached, try again soon' : (m || 'request failed (' + res.status + ')'));
+        });
+      }
+      var reader = res.body.getReader(), dec = new TextDecoder(), buf = '', text = '';
+      function pump() {
+        return reader.read().then(function (r) {
+          if (r.done) return text;
+          buf += dec.decode(r.value, { stream: true });
+          var parts = buf.split('\n\n'); buf = parts.pop();
+          parts.forEach(function (ev) {
+            var line = ev.split('\n').filter(function (l) { return l.indexOf('data:') === 0; })[0]; if (!line) return;
+            var j; try { j = JSON.parse(line.slice(5)); } catch (e) { return; }
+            if (j.type === 'content_block_delta' && j.delta && j.delta.type === 'text_delta') { text += j.delta.text; onProgress(text.length); }
+            else if (j.type === 'error') throw new Error((j.error && j.error.message) || 'the model returned an error');
+          });
+          return pump();
+        });
+      }
+      return pump();
+    });
+  }
+  function cleanNode(x, d, budget) {
+    if (!x || typeof x.t !== 'string' || !x.t.trim() || budget.n <= 0) return null;
+    budget.n--;
+    var kids = Array.isArray(x.ch) && d < 6 ? x.ch.map(function (c) { return cleanNode(c, d + 1, budget); }).filter(Boolean) : [];
+    return T(x.t.trim().slice(0, 140), kids, { n: typeof x.n === 'string' ? x.n.trim().slice(0, 1500) : '', k: x.k === 'q' ? 'q' : '' });
+  }
+  function aiToMap(text, fname) {
+    var a = text.indexOf('{'), b = text.lastIndexOf('}');
+    if (a < 0 || b <= a) throw new Error('the reply was not a map');
+    var o = JSON.parse(text.slice(a, b + 1)), list = o.branches || o.ch;
+    if (!Array.isArray(list)) throw new Error('the reply had no branches');
+    var budget = { n: 500 }, rootNode = T((o.title || fname).toString().slice(0, 90), [], { n: typeof o.note === 'string' ? o.note : '' });
+    rootNode.ch = list.map(function (x) { return cleanNode(x, 1, budget); }).filter(Boolean);
+    if (!rootNode.ch.length) throw new Error('the map was empty');
+    normalize(rootNode);
+    return { id: uid(), name: rootNode.t, updated: Date.now(), root: rootNode };
+  }
+  var busy = { ctl: null, cancelled: false };
+  function showBusy(title, msg) { $('busyT').textContent = title; $('busyP').textContent = msg; $('busy').hidden = false; }
+  $('busyX').addEventListener('click', function () { busy.cancelled = true; if (busy.ctl) busy.ctl.abort(); });
+
+
+  /* ---------- theme ---------- */
+  var TKEY = 'mindmaps-theme', DARKQ = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+  function themeMode() { try { var t = localStorage.getItem(TKEY); if (t === 'light' || t === 'dark') return t; } catch (e) {} return 'system'; }
+  function effTheme() { var a = document.documentElement.getAttribute('data-theme'); return a || (DARKQ && DARKQ.matches ? 'dark' : 'light'); }
+  function applyTheme(mode) {
+    var r = document.documentElement;
+    if (mode === 'light' || mode === 'dark') r.setAttribute('data-theme', mode); else r.removeAttribute('data-theme');
+    try { if (mode === 'system') localStorage.removeItem(TKEY); else localStorage.setItem(TKEY, mode); } catch (e) {}
+    var dark = effTheme() === 'dark'; $('tc').setAttribute('content', dark ? '#000000' : '#F2F2F7');
+    ['lTheme', 'bTheme'].forEach(function (id) {
+      var b = $(id); b.innerHTML = dark ? SUN_SVG : MOON_SVG; b.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode'); b.title = b.getAttribute('aria-label');
+    });
+  }
+  var SUN_SVG = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 2.5v2 M12 19.5v2 M2.5 12h2 M19.5 12h2 M5.2 5.2l1.4 1.4 M17.4 17.4l1.4 1.4 M5.2 18.8l1.4-1.4 M17.4 6.6l1.4-1.4"/></svg>', MOON_SVG = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>';
+  function toggleTheme() { applyTheme(effTheme() === 'dark' ? 'light' : 'dark'); }
+  $('lTheme').addEventListener('click', toggleTheme); $('bTheme').addEventListener('click', toggleTheme);
+  if (DARKQ && DARKQ.addEventListener) DARKQ.addEventListener('change', function () { if (themeMode() === 'system') applyTheme('system'); });
+
+  /* ---------- account + sync (Supabase REST, optional) ---------- */
+  var SESS = 'mindmaps-session-v1';
+  var SQL = [
+    'create table if not exists mm_items (',
+    '  user_id uuid not null default auth.uid() references auth.users on delete cascade,',
+    '  id text not null,',
+    '  kind text not null,',
+    '  data jsonb,',
+    '  deleted boolean not null default false,',
+    '  updated_at bigint not null,',
+    '  primary key (user_id, id)',
+    ');',
+    'create index if not exists mm_items_since on mm_items (user_id, updated_at);',
+    'alter table mm_items enable row level security;',
+    'drop policy if exists "own rows" on mm_items;',
+    'create policy "own rows" on mm_items for all using (user_id = auth.uid()) with check (user_id = auth.uid());'
+  ].join('\n');
+  var cloud = { session: null, msg: '' }, syncRun = false, syncTimer = null;
+  try { cloud.session = JSON.parse(localStorage.getItem(SESS) || 'null'); } catch (e) {}
+  function cloudCfg() {
+    var c = window.MM_CONFIG || {}, url = String(c.supabaseUrl || settings.sbUrl || '').trim().replace(/\/+$/, ''), key = String(c.supabaseAnonKey || settings.sbKey || '').trim();
+    return /^https:\/\/[^\s/]+/.test(url) && key ? { url: url, key: key, fixed: !!(c.supabaseUrl && c.supabaseAnonKey) } : null;
+  }
+  function saveSession() { try { if (cloud.session) localStorage.setItem(SESS, JSON.stringify(cloud.session)); else localStorage.removeItem(SESS); } catch (e) {} }
+  function readJson(res) {
+    return res.text().then(function (t) {
+      var j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
+      if (!res.ok) throw new Error((j && (j.msg || j.error_description || j.message || (typeof j.error === 'string' && j.error))) || 'Request failed (' + res.status + ')');
+      return j || {};
+    });
+  }
+  function authCall(c, path, body, token) {
+    return fetch(c.url + '/auth/v1/' + path, { method: 'POST', headers: { apikey: c.key, 'content-type': 'application/json', Authorization: 'Bearer ' + (token || c.key) }, body: JSON.stringify(body || {}) }).then(readJson);
+  }
+  function setSession(j) {
+    if (!j || !j.access_token) return null;
+    var prev = cloud.session || {};
+    cloud.session = { access_token: j.access_token, refresh_token: j.refresh_token || prev.refresh_token, expires_at: j.expires_at || Math.floor(Date.now() / 1000) + (j.expires_in || 3600),
+      email: (j.user && j.user.email) || prev.email || '', uid: (j.user && j.user.id) || prev.uid || '' };
+    saveSession(); return cloud.session;
+  }
+  function refreshSession(c) {
+    return authCall(c, 'token?grant_type=refresh_token', { refresh_token: cloud.session && cloud.session.refresh_token }).then(setSession)
+      .catch(function () { cloud.session = null; saveSession(); setSyncMsg(''); throw new Error('Your session expired. Sign in again.'); });
+  }
+  function ensureToken(c) { if (!cloud.session) throw new Error('Not signed in'); return cloud.session.expires_at - Date.now() / 1000 > 90 ? Promise.resolve() : refreshSession(c); }
+  function rest(c, method, path, body, prefer, retried) {
+    var h = { apikey: c.key, Authorization: 'Bearer ' + cloud.session.access_token, 'content-type': 'application/json' }; if (prefer) h.Prefer = prefer;
+    return fetch(c.url + '/rest/v1/' + path, { method: method, headers: h, body: body ? JSON.stringify(body) : undefined }).then(function (res) {
+      if (res.status === 401 && !retried) return refreshSession(c).then(function () { return rest(c, method, path, body, prefer, true); });
+      return readJson(res);
+    });
+  }
+  function setSyncMsg(t) { cloud.msg = t; var e = $('syncLine'); if (e) { e.textContent = cloud.session && t ? t : ''; e.hidden = !(cloud.session && t); } }
+  function applyRemote(r) {
+    var list = r.kind === 'folder' ? lib.folders : lib.maps;
+    var local = list.filter(function (x) { return x.id === r.id; })[0], tb = lib.deleted.filter(function (x) { return x.id === r.id; })[0];
+    if (r.updated_at <= Math.max(local ? local.updated || 0 : 0, tb ? tb.updated : 0)) return false;
+    if (r.deleted) {
+      if (local) list.splice(list.indexOf(local), 1);
+      if (tb) tb.updated = r.updated_at; else lib.deleted.push({ id: r.id, kind: r.kind, updated: r.updated_at });
+      return true;
+    }
+    if (tb) lib.deleted.splice(lib.deleted.indexOf(tb), 1);
+    var d = r.data || {};
+    if (r.kind === 'folder') {
+      var f = { id: r.id, name: d.name || 'Folder', parent: d.parent || null, updated: r.updated_at };
+      if (local) Object.assign(local, f); else lib.folders.push(f);
+    } else {
+      if (!d.root || !Array.isArray(d.root.ch)) return false;
+      var m = { id: r.id, name: d.name || 'Untitled map', root: d.root, folder: d.folder || null, updated: r.updated_at };
+      if (local) Object.assign(local, m); else lib.maps.push(m);
+    }
+    return true;
+  }
+  function sync(o) {
+    o = o || {}; var c = cloudCfg();
+    if (!c || !cloud.session || syncRun) return Promise.resolve(false);
+    syncRun = true; setSyncMsg('Syncing…');
+    var t0 = Date.now(), changed = false;
+    return ensureToken(c).then(function () {
+      if (lib.sync.uid !== cloud.session.uid) lib.sync = { pull: 0, push: 0, uid: cloud.session.uid };
+      if (o.pull === false) return null;
+      return rest(c, 'GET', 'mm_items?select=id,kind,data,deleted,updated_at&updated_at=gt.' + (lib.sync.pull || 0) + '&order=updated_at.asc&limit=1000');
+    }).then(function (rows) {
+      var maxPull = lib.sync.pull || 0;
+      (rows || []).forEach(function (r) { maxPull = Math.max(maxPull, r.updated_at); if (applyRemote(r)) changed = true; });
+      var since = lib.sync.push || 0, out = [];
+      lib.maps.forEach(function (m) { if (m.updated > since) out.push({ id: m.id, kind: 'map', data: { name: m.name, root: m.root, folder: m.folder || null }, deleted: false, updated_at: m.updated }); });
+      lib.folders.forEach(function (f) { if (f.updated > since) out.push({ id: f.id, kind: 'folder', data: { name: f.name, parent: f.parent || null }, deleted: false, updated_at: f.updated }); });
+      lib.deleted.forEach(function (d) { if (d.updated > since) out.push({ id: d.id, kind: d.kind, data: null, deleted: true, updated_at: d.updated }); });
+      var p = Promise.resolve();
+      for (var i = 0; i < out.length; i += 4) (function (chunk) { p = p.then(function () { return rest(c, 'POST', 'mm_items?on_conflict=user_id,id', chunk, 'resolution=merge-duplicates,return=minimal'); }); })(out.slice(i, i + 4));
+      return p.then(function () { if (o.pull !== false) lib.sync.pull = maxPull; lib.sync.push = t0; saveLibQuiet(); });
+    }).then(function () {
+      setSyncMsg('Synced ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' · ' + cloud.session.email);
+      if (changed && !$('libScreen').hidden) renderLib();
+      return true;
+    }).catch(function (err) {
+      var m = err && err.message || 'unknown error';
+      setSyncMsg(/Failed to fetch|NetworkError|Load failed/i.test(m) ? 'Offline. Changes will sync when you are back online.' : 'Sync failed: ' + m);
+      return false;
+    }).then(function (ok) { syncRun = false; return ok; });
+  }
+  function scheduleSync() {
+    if (typeof cloud === 'undefined' || !cloud || !cloud.session) return;
+    clearTimeout(syncTimer); syncTimer = setTimeout(function () { sync({ pull: !$('libScreen').hidden }); }, 3500);
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && cloud.session && !$('libScreen').hidden) sync({ pull: true }); });
+  setInterval(function () { if (!document.hidden && cloud.session && !$('libScreen').hidden) sync({ pull: true }); }, 90000);
+
+  function accountSheet() {
+    var w = el('div', 'fld'); w.style.gap = '12px'; var title = 'Account';
+    var msg = el('p', 'msg'), pending = false;
+    function say(t, err) { msg.textContent = t || ''; msg.className = 'msg' + (err ? ' err' : ''); }
+    function field(label, type, id, val, ph) {
+      var f = el('div', 'fld'), l = el('label', '', label), i = el('input'); i.type = type; i.id = id; l.htmlFor = id; if (val) i.value = val; if (ph) i.placeholder = ph;
+      i.autocomplete = type === 'password' ? 'current-password' : type === 'email' ? 'email' : 'off'; i.setAttribute('autocapitalize', 'off'); i.spellcheck = false; f.appendChild(l); f.appendChild(i); return { f: f, i: i };
+    }
+    function btn(label, cls, fn) { var b = el('button', 'cap ' + cls, label); b.type = 'button'; b.addEventListener('click', fn); return b; }
+    function run(p, ok) { if (pending) return; pending = true; say('Working…'); p.then(function (r) { pending = false; ok && ok(r); }, function (e) { pending = false; say(e && /Failed to fetch|Load failed|NetworkError/i.test(e.message) ? 'No connection. Check your internet and the project URL.' : (e && e.message) || 'Something went wrong.', true); }); }
+    function setupView() {
+      var c0 = cloudCfg();
+      w.appendChild(el('p', '', 'Sign-in uses a free Supabase project that belongs to you, so your maps stay in your own account. Create a project, run the setup SQL once, then paste the project URL and anon key here. Hosts can also put them in config.js.'));
+      var u = field('Project URL', 'text', 'aUrl', settings.sbUrl, 'https://abcd1234.supabase.co'), k = field('Anon (public) key', 'text', 'aKey', settings.sbKey, 'eyJ…');
+      w.appendChild(u.f); w.appendChild(k.f); w.appendChild(el('pre', '', SQL)); w.appendChild(msg);
+      var row = el('div', 'srow');
+      row.appendChild(btn('Copy setup SQL', 'plain', function () { var p = navigator.clipboard && navigator.clipboard.writeText(SQL); if (p) p.then(function () { say('Copied. Paste it into the Supabase SQL editor and run it.'); }, function () { say('Couldn’t copy. Select the SQL above and copy it.', true); }); else say('Select the SQL above and copy it.', true); }));
+      row.appendChild(btn('Save', 'tint', function () {
+        settings.sbUrl = u.i.value.trim(); settings.sbKey = k.i.value.trim(); saveSettings();
+        if (!cloudCfg()) { say('Enter the full https:// project URL and the anon key.', true); return; } draw();
+      }));
+      w.appendChild(row);
+      if (c0) w.appendChild(btn('Back', 'plain', draw));
+    }
+    function signedOutView() {
+      var c = cloudCfg(), em = field('Email', 'email', 'aEmail', ''), pw = field('Password', 'password', 'aPass', '');
+      w.appendChild(el('p', '', 'Sign in to keep your maps and folders in sync across your devices. Everything also stays on this device.'));
+      w.appendChild(em.f); w.appendChild(pw.f); w.appendChild(msg);
+      function creds() { var e = em.i.value.trim(), p = pw.i.value; if (!/.+@.+\..+/.test(e)) { say('Enter a valid email address.', true); return null; } if (p.length < 6) { say('Use a password of at least 6 characters.', true); return null; } return { email: e, password: p }; }
+      var row = el('div', 'srow');
+      row.appendChild(btn('Create account', 'plain', function () {
+        var cr = creds(); if (!cr) return;
+        run(authCall(c, 'signup', cr), function (j) {
+          if (j && j.access_token) { setSession(j); toast('Signed in.'); sync({ pull: true }).then(function () { if (!$('libScreen').hidden) renderLib(); }); draw(); }
+          else say('Check your email to confirm the account, then sign in.');
+        });
+      }));
+      row.appendChild(btn('Sign in', 'tint', function () {
+        var cr = creds(); if (!cr) return;
+        run(authCall(c, 'token?grant_type=password', cr), function (j) { setSession(j); toast('Signed in.'); sync({ pull: true }).then(function () { if (!$('libScreen').hidden) renderLib(); }); draw(); });
+      }));
+      w.appendChild(row);
+      var links = el('div', 'srow'); links.style.justifyContent = 'space-between';
+      var fg = el('button', 'linkb', 'Forgot password'); fg.type = 'button';
+      fg.addEventListener('click', function () { var e = em.i.value.trim(); if (!/.+@.+\..+/.test(e)) { say('Enter your email first.', true); return; } run(authCall(c, 'recover', { email: e }), function () { say('Check your email for a reset link.'); }); });
+      links.appendChild(fg);
+      if (!c.fixed) { var ch = el('button', 'linkb', 'Change project'); ch.type = 'button'; ch.addEventListener('click', function () { w.innerHTML = ''; setupView(); }); links.appendChild(ch); }
+      w.appendChild(links);
+    }
+    function signedInView() {
+      var c = cloudCfg();
+      w.appendChild(el('p', '', 'Signed in as ' + cloud.session.email + '. Maps and folders sync automatically.'));
+      var st = el('p', 'msg', cloud.msg || ''); w.appendChild(st); w.appendChild(msg);
+      var row = el('div', 'srow');
+      row.appendChild(btn('Sync now', 'tint', function () { st.textContent = 'Syncing…'; sync({ pull: $('edScreen').hidden }).then(function () { st.textContent = cloud.msg; if (!$('libScreen').hidden) renderLib(); }); }));
+      row.appendChild(btn('Sign out', 'plain', function () {
+        var tok = cloud.session.access_token; cloud.session = null; saveSession(); setSyncMsg(''); authCall(c, 'logout', {}, tok).catch(function () {}); toast('Signed out. Your maps stay on this device.'); draw();
+      }));
+      w.appendChild(row);
+    }
+    function draw() { w.innerHTML = ''; if (!cloudCfg()) setupView(); else if (!cloud.session) signedOutView(); else signedInView(); }
+    var done = btn('Close', 'plain', closeSheet);
+    draw(); var wrap = el('div', 'fld'); wrap.style.gap = '12px'; wrap.appendChild(w); wrap.appendChild(done); openSheet(title, wrap);
+  }
+
+  /* ---------- editor state ---------- */
+  var history = [], future = [], sel = null, query = '';
+  var info = new Map(), view = { tx: 0, ty: 0, s: 1 }, editing = false;
+  var viewEl = $('view'), stage = $('stage'), layer = $('layer'), links = $('links'), app = $('app');
+
+  function ser() { return JSON.stringify(root); }
+  function persist() { if (cur) { cur.updated = Date.now(); cur.root = root; saveLib(); } }
+  function openMap(id) {
+    cur = lib.maps.filter(function (m) { return m.id === id; })[0]; if (!cur) return;
+    root = cur.root; normalize(root); history = []; future = []; sel = root.id; query = ''; $('q').value = '';
+    $('mapName').value = cur.name; var cfb = cur.folder ? folderById(cur.folder) : null; $('bBackT').textContent = cfb ? cfb.name : 'Mind Maps'; showEd();
+    if (window.innerWidth >= 900) app.classList.add('panel-open'); else app.classList.remove('panel-open');
+    render(); requestAnimationFrame(fit);
+  }
+  $('bBack').addEventListener('click', function () { persist(); showLib(); });
+  $('mapName').addEventListener('input', function (e) { if (cur) { cur.name = e.target.value || 'Untitled map'; persist(); } });
+  $('mapName').addEventListener('keydown', function (e) { if (e.key === 'Enter') e.target.blur(); });
+
+  function findNode(id, n, parent) {
+    n = n || root;
+    if (n.id === id) return { n: n, parent: parent || null };
+    for (var i = 0; i < n.ch.length; i++) { var r = findNode(id, n.ch[i], n); if (r) return r; }
+    return null;
+  }
+  function branchOf(id) { for (var i = 0; i < root.ch.length; i++) { if (findNode(id, root.ch[i])) return root.ch[i]; } return null; }
+
+  function pushHist(snap) { history.push(snap); if (history.length > 120) history.shift(); future = []; }
+  function mutate(fn) { var snap = ser(); fn(); pushHist(snap); persist(); render(); }
+  function undo() { if (!history.length) return; future.push(ser()); root = JSON.parse(history.pop()); cur.root = root; if (!findNode(sel)) sel = root.id; persist(); render(); }
+  function redo() { if (!future.length) return; history.push(ser()); root = JSON.parse(future.pop()); cur.root = root; if (!findNode(sel)) sel = root.id; persist(); render(); }
+
+  /* ---------- render + layout ---------- */
+  var VGAP = 9, HGAP = 44, HROOT = 62;
+  function vis(n) { return (n.c && !query) ? [] : n.ch; }
+
+  function render() {
+    layer.innerHTML = ''; links.innerHTML = ''; info.clear();
+    var q = query.trim().toLowerCase();
+    function build(n, depth, col, parent) {
+      var el = document.createElement('div');
+      el.className = 'node d' + Math.min(depth, 2) + (n.k === 'q' ? ' q' : '') + (n.n ? ' hasnote' : '');
+      el.dataset.id = n.id;
+      if (depth > 0) el.style.setProperty('--c', colV(col));
+      var tx = document.createElement('span'); tx.className = 'txt'; tx.textContent = n.t; el.appendChild(tx);
+      if (depth > 0 && n.ch.length) {
+        var b = document.createElement('button'); b.className = 'tog'; b.type = 'button';
+        b.setAttribute('aria-label', n.c ? 'Expand branch' : 'Collapse branch');
+        b.textContent = (n.c && !q) ? String(descendants(n)) : '−'; el.appendChild(b);
+      }
+      if (q) { var hit = (n.t + ' ' + n.n).toLowerCase().indexOf(q) >= 0; el.classList.add(hit ? 'hit' : 'dim'); }
+      if (n.id === sel) el.classList.add('sel');
+      layer.appendChild(el);
+      var inf = { n: n, el: el, depth: depth, parent: parent, dir: 1, col: col };
+      info.set(n.id, inf);
+      vis(n).forEach(function (c) { build(c, depth + 1, depth === 0 ? c.col : col, inf); });
+    }
+    build(root, 0, 0, null);
+    info.forEach(function (inf) { inf.w = inf.el.offsetWidth; inf.h = inf.el.offsetHeight; });
+    var Hm = new Map();
+    function subH(n) {
+      if (Hm.has(n.id)) return Hm.get(n.id);
+      var kids = vis(n), inf = info.get(n.id), sum = 0;
+      kids.forEach(function (c, i) { sum += subH(c) + (i ? VGAP : 0); });
+      var h = Math.max(inf.h, sum); Hm.set(n.id, h); return h;
+    }
+    subH(root);
+    var rinf = info.get(root.id); rinf.x = -rinf.w / 2; rinf.y = -rinf.h / 2;
+    var kids = vis(root), Hs = kids.map(function (k) { return Hm.get(k.id); });
+    var tot = Hs.reduce(function (a, b) { return a + b; }, 0), best = kids.length > 1 ? 1 : kids.length, bestD = Infinity, run = 0;
+    for (var k = 0; k <= kids.length; k++) {
+      if (k > 0) run += Hs[k - 1];
+      if (kids.length > 1 && (k < 1 || k > kids.length - 1)) continue;
+      var d = Math.abs(run - (tot - run)); if (d < bestD) { bestD = d; best = k; }
+    }
+    function place(n, edgeX, cy, dir) {
+      var inf = info.get(n.id); inf.dir = dir;
+      inf.x = dir > 0 ? edgeX : edgeX - inf.w; inf.y = cy - inf.h / 2;
+      var ks = vis(n); if (!ks.length) return;
+      var total = ks.reduce(function (a, c, i) { return a + Hm.get(c.id) + (i ? VGAP : 0); }, 0);
+      var y = cy - total / 2, ce = dir > 0 ? inf.x + inf.w + HGAP : inf.x - HGAP;
+      ks.forEach(function (c) { var H = Hm.get(c.id); place(c, ce, y + H / 2, dir); y += H + VGAP; });
+    }
+    function side(list, dir) {
+      if (!list.length) return;
+      var total = list.reduce(function (a, c, i) { return a + Hm.get(c.id) + (i ? VGAP : 0); }, 0), y = -total / 2;
+      var edge = dir > 0 ? rinf.w / 2 + HROOT : -rinf.w / 2 - HROOT;
+      list.forEach(function (c) { var H = Hm.get(c.id); place(c, edge, y + H / 2, dir); y += H + VGAP; });
+    }
+    side(kids.slice(0, best), 1); side(kids.slice(best), -1);
+    var svg = '';
+    info.forEach(function (inf) {
+      inf.el.style.transform = 'translate(' + inf.x + 'px,' + inf.y + 'px)';
+      inf.el.classList.toggle('L', inf.dir < 0);
+      var p = inf.parent; if (!p) return;
+      var dir = inf.dir, sx = dir > 0 ? p.x + p.w : p.x, sy = p.y + p.h / 2;
+      var ex = dir > 0 ? inf.x : inf.x + inf.w, ey = inf.y + inf.h / 2, mx = (sx + ex) / 2;
+      var sw = inf.depth === 1 ? 3.5 : inf.depth === 2 ? 2.4 : 1.8;
+      svg += '<path d="M' + sx + ' ' + sy + 'C' + mx + ' ' + sy + ' ' + mx + ' ' + ey + ' ' + ex + ' ' + ey + '" style="stroke:' + colV(inf.col) + ';stroke-width:' + sw + '"/>';
+    });
+    links.innerHTML = svg;
+    $('count').textContent = countAll(root) + ' nodes';
+    syncChrome(); applyView();
+  }
+
+  /* ---------- view ---------- */
+  function applyView() {
+    stage.style.transform = 'translate(' + view.tx + 'px,' + view.ty + 'px) scale(' + view.s + ')';
+    var g = 24 * view.s; viewEl.style.backgroundSize = g + 'px ' + g + 'px';
+    viewEl.style.backgroundPosition = view.tx + 'px ' + view.ty + 'px';
+  }
+  var safeTop = null;
+  function insets() {
+    if (safeTop === null) { var pr = document.createElement('div'); pr.style.cssText = 'position:fixed;top:0;left:0;height:env(safe-area-inset-top,0px);width:1px;visibility:hidden'; document.body.appendChild(pr); safeTop = pr.offsetHeight; pr.remove(); }
+    var narrow = window.innerWidth <= 820, po = app.classList.contains('panel-open'), vh = viewEl.clientHeight;
+    return { t: 70 + safeTop, b: 104 + (narrow && po ? vh * 0.38 : 0), l: 24, r: (!narrow && po) ? 336 : 24 };
+  }
+  function fit() {
+    if (!info.size) return;
+    var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+    info.forEach(function (i) { minX = Math.min(minX, i.x); minY = Math.min(minY, i.y); maxX = Math.max(maxX, i.x + i.w); maxY = Math.max(maxY, i.y + i.h); });
+    var vw = viewEl.clientWidth, vh = viewEl.clientHeight, I = insets(), aw = vw - I.l - I.r, ah = vh - I.t - I.b;
+    if (!vw || !vh || aw < 50 || ah < 50) return;
+    var s = Math.max(0.12, Math.min(aw / (maxX - minX), ah / (maxY - minY), 1.2));
+    view.s = s; view.tx = I.l + aw / 2 - ((minX + maxX) / 2) * s; view.ty = I.t + ah / 2 - ((minY + maxY) / 2) * s; applyView();
+  }
+  function zoomAt(cx, cy, f) {
+    var s2 = Math.min(2.4, Math.max(0.1, view.s * f)), k = s2 / view.s;
+    view.tx = cx - (cx - view.tx) * k; view.ty = cy - (cy - view.ty) * k; view.s = s2; applyView();
+  }
+  function ensureVisible(id) {
+    var i = info.get(id); if (!i) return;
+    var vw = viewEl.clientWidth, vh = viewEl.clientHeight, I = insets();
+    var l = view.tx + i.x * view.s, r = view.tx + (i.x + i.w) * view.s, t = view.ty + i.y * view.s, b = view.ty + (i.y + i.h) * view.s;
+    if (l < I.l) view.tx += I.l - l; else if (r > vw - I.r) view.tx -= r - (vw - I.r);
+    if (t < I.t) view.ty += I.t - t; else if (b > vh - I.b) view.ty -= b - (vh - I.b);
+    applyView();
+  }
+  viewEl.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var rc = viewEl.getBoundingClientRect();
+    zoomAt(e.clientX - rc.left, e.clientY - rc.top, Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0016)));
+  }, { passive: false });
+  ['gesturestart', 'gesturechange'].forEach(function (n) { viewEl.addEventListener(n, function (e) { e.preventDefault(); }); });
+
+  var ptrs = new Map(), moved = false, panning = false, start = null, pinch0 = null;
+  viewEl.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('[contenteditable="true"]')) return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrs.size === 1) { moved = false; start = { x: e.clientX, y: e.clientY, tx: view.tx, ty: view.ty }; }
+    if (ptrs.size === 2) { var a = Array.from(ptrs.values()); pinch0 = { d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), s: view.s, tx: view.tx, ty: view.ty }; moved = true; }
+  });
+  viewEl.addEventListener('pointermove', function (e) {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    var rc = viewEl.getBoundingClientRect();
+    if (ptrs.size === 2 && pinch0) {
+      var a = Array.from(ptrs.values()), d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
+      var cx = (a[0].x + a[1].x) / 2 - rc.left, cy = (a[0].y + a[1].y) / 2 - rc.top;
+      var s2 = Math.min(2.4, Math.max(0.1, pinch0.s * d / pinch0.d)), k = s2 / pinch0.s;
+      view.tx = cx - (cx - pinch0.tx) * k; view.ty = cy - (cy - pinch0.ty) * k; view.s = s2; applyView(); return;
+    }
+    if (ptrs.size === 1 && start) {
+      var dx = e.clientX - start.x, dy = e.clientY - start.y;
+      if (!panning && Math.hypot(dx, dy) > 6) { panning = true; moved = true; try { viewEl.setPointerCapture(e.pointerId); } catch (x) {} }
+      if (panning) { view.tx = start.tx + dx; view.ty = start.ty + dy; applyView(); }
+    }
+  });
+  function endPtr(e) {
+    ptrs.delete(e.pointerId);
+    if (ptrs.size < 2) pinch0 = null;
+    if (!ptrs.size) { panning = false; start = null; }
+  }
+  viewEl.addEventListener('pointerup', endPtr); viewEl.addEventListener('pointercancel', endPtr);
+
+  /* ---------- selection and editing ---------- */
+  function select(id, reveal) {
+    sel = id;
+    info.forEach(function (i, k) { i.el.classList.toggle('sel', k === id); });
+    syncChrome(); if (reveal) ensureVisible(id);
+  }
+  var lastTap = { id: null, t: 0 };
+  viewEl.addEventListener('click', function (e) {
+    if (e.target.closest('[contenteditable="true"]')) return;
+    var nodeEl = e.target.closest('.node');
+    if (nodeEl) {
+      var id = nodeEl.dataset.id;
+      if (e.target.closest('.tog')) { toggleCollapse(id); return; }
+      var now = Date.now();
+      if (lastTap.id === id && now - lastTap.t < 380) { lastTap = { id: null, t: 0 }; select(id); startEdit(id); return; }
+      lastTap = { id: id, t: now }; select(id); return;
+    }
+    if (!moved) { sel = null; info.forEach(function (i) { i.el.classList.remove('sel'); }); syncChrome(); }
+  });
+  function startEdit(id) {
+    if (editing) return;
+    var inf = info.get(id); if (!inf) return;
+    var t = inf.el.querySelector('.txt'), orig = inf.n.t, before = ser(), done = false;
+    editing = true; t.contentEditable = 'true'; t.focus();
+    var r = document.createRange(); r.selectNodeContents(t); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    function finish(save) {
+      if (done) return; done = true; editing = false; t.contentEditable = 'false';
+      var v = t.textContent.replace(/\s+/g, ' ').trim();
+      if (save && v && v !== orig) { inf.n.t = v; pushHist(before); persist(); }
+      render();
+    }
+    t.addEventListener('blur', function () { finish(true); }, { once: true });
+    t.addEventListener('keydown', function (e) {
+      e.stopPropagation();
+      if (e.key === 'Enter') { e.preventDefault(); t.blur(); }
+      else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    });
+  }
+  function addChild() {
+    var tgt = findNode(sel || root.id).n, nid;
+    mutate(function () { var c = T('New idea'); nid = c.id; if (tgt === root) c.col = root.ch.length % 6; tgt.c = false; tgt.ch.push(c); });
+    select(nid, true); startEdit(nid);
+  }
+  function addSibling() {
+    var f = findNode(sel || root.id);
+    if (!f.parent) { addChild(); return; }
+    var nid;
+    mutate(function () { var c = T('New idea'); nid = c.id; if (f.parent === root) c.col = root.ch.length % 6; var i = f.parent.ch.indexOf(f.n); f.parent.ch.splice(i + 1, 0, c); });
+    select(nid, true); startEdit(nid);
+  }
+  function del() {
+    var f = findNode(sel); if (!f || !f.parent) { toast('The central topic can’t be deleted.'); return; }
+    var n = countAll(f.n), next = f.parent.id;
+    mutate(function () { f.parent.ch.splice(f.parent.ch.indexOf(f.n), 1); });
+    sel = next; render(); toast(n > 1 ? 'Deleted ' + n + ' nodes. Undo brings them back.' : 'Deleted. Undo brings it back.');
+  }
+  function toggleCollapse(id) { var f = findNode(id); if (!f || !f.n.ch.length || f.n === root) return; mutate(function () { f.n.c = !f.n.c; }); }
+  function move(d) {
+    var f = findNode(sel); if (!f || !f.parent) return;
+    var i = f.parent.ch.indexOf(f.n), j = i + d; if (j < 0 || j >= f.parent.ch.length) return;
+    mutate(function () { f.parent.ch.splice(i, 1); f.parent.ch.splice(j, 0, f.n); });
+  }
+  function setAll(c) {
+    mutate(function () { (function w(n, d) { if (d >= 1 && n.ch.length) n.c = c; n.ch.forEach(function (x) { w(x, d + 1); }); })(root, 0); });
+    if (c) { var b = sel && branchOf(sel); sel = b ? b.id : root.id; render(); }
+    setTimeout(fit, 0);
+  }
+
+  /* ---------- panel + toolbar ---------- */
+  var pTitle = $('pTitle'), pNote = $('pNote'), pQ = $('pQ'), sws = $('sws'), swBtns = [];
+  for (var i = 0; i < 6; i++) {
+    (function (i) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.style.background = colV(i); b.setAttribute('aria-label', 'Branch color ' + (i + 1));
+      b.addEventListener('click', function () { var br = sel && branchOf(sel); if (!br) return; mutate(function () { br.col = i; }); });
+      sws.appendChild(b); swBtns.push(b);
+    })(i);
+  }
+  function syncChrome() {
+    if (!root) return;
+    var f = sel ? findNode(sel) : null, n = f && f.n;
+    $('bUndo').disabled = !history.length; $('bRedo').disabled = !future.length;
+    ['bChild', 'bSib', 'bEdit'].forEach(function (id) { $(id).disabled = !n; });
+    $('bDel').disabled = !n || !f.parent;
+    var has = !!n;
+    [pTitle, pNote].forEach(function (el) { el.disabled = !has; });
+    $('pUp').disabled = !has || !f.parent || f.parent.ch.indexOf(n) === 0;
+    $('pDown').disabled = !has || !f.parent || f.parent.ch.indexOf(n) === f.parent.ch.length - 1;
+    $('pKind').textContent = !has ? 'Nothing selected' : !f.parent ? 'Central topic' : f.parent === root ? 'Main branch' : n.k === 'q' ? 'Self-check question' : 'Idea';
+    if (document.activeElement !== pTitle) pTitle.value = has ? n.t : '';
+    if (document.activeElement !== pNote) pNote.value = has ? n.n : '';
+    pQ.checked = has && n.k === 'q'; pQ.disabled = !has || !f.parent || f.parent === root;
+    var br = has ? branchOf(n.id) : null;
+    swBtns.forEach(function (b, i) { b.disabled = !br; b.setAttribute('aria-pressed', br && br.col === i ? 'true' : 'false'); });
+  }
+  var editSnap = null;
+  [pTitle, pNote].forEach(function (el) {
+    el.addEventListener('focus', function () { editSnap = ser(); });
+    el.addEventListener('blur', function () { if (editSnap !== null && editSnap !== ser()) { pushHist(editSnap); persist(); syncChrome(); } editSnap = null; });
+  });
+  pTitle.addEventListener('input', function () {
+    var f = findNode(sel); if (!f) return; f.n.t = pTitle.value || ' '; persist();
+    var inf = info.get(sel); if (inf) inf.el.querySelector('.txt').textContent = f.n.t;
+    clearTimeout(pTitle._t); pTitle._t = setTimeout(render, 300);
+  });
+  pTitle.addEventListener('keydown', function (e) { if (e.key === 'Enter') pTitle.blur(); });
+  pNote.addEventListener('input', function () {
+    var f = findNode(sel); if (!f) return; f.n.n = pNote.value; persist();
+    var inf = info.get(sel); if (inf) inf.el.classList.toggle('hasnote', !!pNote.value);
+  });
+  pQ.addEventListener('change', function () { var f = findNode(sel); if (!f) return; mutate(function () { f.n.k = pQ.checked ? 'q' : ''; }); });
+  $('pUp').addEventListener('click', function () { move(-1); }); $('pDown').addEventListener('click', function () { move(1); });
+  $('bUndo').addEventListener('click', undo); $('bRedo').addEventListener('click', redo);
+  $('bChild').addEventListener('click', addChild); $('bSib').addEventListener('click', addSibling);
+  $('bEdit').addEventListener('click', function () { if (sel) startEdit(sel); });
+  $('bDel').addEventListener('click', del);
+  $('bZin').addEventListener('click', function () { zoomAt(viewEl.clientWidth / 2, viewEl.clientHeight / 2, 1.25); });
+  $('bZout').addEventListener('click', function () { zoomAt(viewEl.clientWidth / 2, viewEl.clientHeight / 2, 0.8); });
+  $('bFit').addEventListener('click', fit);
+  $('bCollapse').addEventListener('click', function () { setAll(true); });
+  $('bExpand').addEventListener('click', function () { setAll(false); });
+  $('bPanel').addEventListener('click', function () { app.classList.toggle('panel-open'); setTimeout(fit, 0); });
+  $('q').addEventListener('input', function (e) { query = e.target.value; render(); });
+  $('bExportMap').addEventListener('click', function () { persist(); shareFile(slug(cur.name) + '.json', JSON.stringify({ app: 'mindmap', v: 1, name: cur.name, root: root }), 'application/json'); });
+  function outline() {
+    var out = ['# ' + root.t, '']; if (root.n) out.push(root.n, '');
+    (function w(n, d) { n.ch.forEach(function (c) { out.push('  '.repeat(d) + '- ' + (c.k === 'q' ? '[Check] ' : '') + c.t + (c.n ? ' — ' + c.n.replace(/\n/g, ' ') : '')); w(c, d + 1); }); })(root, 0);
+    return out.join('\n');
+  }
+  $('bExport').addEventListener('click', function () { shareFile(slug(cur.name) + '.md', outline(), 'text/markdown'); });
+
+  document.addEventListener('keydown', function (e) {
+    if ($('edScreen').hidden) return;
+    var tg = e.target;
+    if (editing || (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable))) return;
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+    if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
+    if (mod || e.altKey) return;
+    if (e.key === '0') { fit(); return; }
+    if (!sel) { if (e.key.indexOf('Arrow') === 0) { select(root.id, true); e.preventDefault(); } return; }
+    var f = findNode(sel), inf = info.get(sel); if (!f || !inf) return;
+    if (e.key === 'Tab') { e.preventDefault(); addChild(); }
+    else if (e.key === 'Enter') { e.preventDefault(); addSibling(); }
+    else if (e.key === 'F2') { e.preventDefault(); startEdit(sel); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); del(); }
+    else if (e.key === ' ') { e.preventDefault(); toggleCollapse(sel); }
+    else if (e.key === 'Escape') { sel = null; render(); }
+    else if (e.key.indexOf('Arrow') === 0) {
+      e.preventDefault();
+      var kids = vis(f.n), sibs = f.parent ? vis(f.parent) : [], i = sibs.indexOf(f.n), target = null;
+      if (e.key === 'ArrowUp') target = sibs[i - 1];
+      else if (e.key === 'ArrowDown') target = sibs[i + 1];
+      else {
+        var want = e.key === 'ArrowRight' ? 1 : -1;
+        if (!f.parent) target = kids.filter(function (k) { return info.get(k.id).dir === want; })[0];
+        else if (inf.dir === want) target = kids[0]; else target = f.parent;
+      }
+      if (target) select(target.id, true);
+    }
+  });
+  window.addEventListener('resize', function () { if (!$('edScreen').hidden) applyView(); });
+
+  /* ---------- boot ---------- */
+  var standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  $('installTip').hidden = standalone;
+  applyTheme(themeMode());
+  showLib();
+  if (cloud.session) sync({ pull: true });
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) { navigator.serviceWorker.register('sw.js').catch(function () {}); }
+  window.__mm = { pptxToMap: pptxToMap };
+})();
+</script>
+</body>
+</html>
